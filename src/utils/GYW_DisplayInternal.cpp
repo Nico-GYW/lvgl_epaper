@@ -1,4 +1,8 @@
 #include "GYW_DisplayInternal.h"
+
+#include <lvgl_mutex.hpp>
+#include <mutex>
+
 #include "GYW_DisplayResources.h"
 #include "./peripherals/lvgl_driver.h"
 #include "./GYW_Debug.h"
@@ -11,6 +15,8 @@ lv_obj_t *main_screen = nullptr;
 // Implémentation des fonctions internes
 
 void initMainScreen_internal() {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[initMainScreen_internal] Initialisation de l'écran principal.\n");
 
     // Utiliser l'écran par défaut
@@ -32,6 +38,8 @@ void initMainScreen_internal() {
 }
 
 void displayText_internal(const char* text, int16_t x, int16_t y, const char* fontName, uint8_t fontSize, lv_color_t color) {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[displayText_internal] Affichage du texte.\n");
     DEBUG_INFO("  Texte : '%s'\n", text);
     DEBUG_INFO("  Position : (%d, %d)\n", x, y);
@@ -57,6 +65,8 @@ void displayText_internal(const char* text, int16_t x, int16_t y, const char* fo
 }
 
 void displayIcon_internal(const char* iconName, int16_t x, int16_t y, float scale, lv_color_t color) {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[displayIcon_internal] Affichage de l'icône.\n");
     DEBUG_INFO("  Icône: '%s'\n", iconName);
     DEBUG_INFO("  Position: (%d, %d)\n", x, y);
@@ -94,6 +104,8 @@ void displayIcon_internal(const char* iconName, int16_t x, int16_t y, float scal
 }
 
 void clearScreen_internal(lv_color_t color) {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[clearScreen_internal] Nettoyage de l'écran avec la couleur 0x%04X.\n", color.full);
 
     lv_obj_clean(lv_scr_act());
@@ -101,6 +113,8 @@ void clearScreen_internal(lv_color_t color) {
 }
 
 void displayRectangle_internal(int16_t x, int16_t y, uint16_t width, uint16_t height, lv_color_t color) {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[displayRectangle_internal] Affichage d'un rectangle.\n");
     DEBUG_INFO("  Position : (%d, %d)\n", x, y);
     DEBUG_INFO("  Taille : %d x %d\n", width, height);
@@ -124,6 +138,8 @@ void setScreenBrightness_internal(uint8_t brightness) {
 }
 
 void displaySpinner_internal(int16_t x, int16_t y, float scale, lv_color_t color, float spins_per_second) {
+    std::scoped_lock lock(lvgl_mutex);
+
     DEBUG_INFO("[displaySpinner_internal] Affichage d'un spinner.\n");
     DEBUG_INFO("  Position : (%d, %d)\n", x, y);
     DEBUG_INFO("  Échelle : %.2f\n", scale);

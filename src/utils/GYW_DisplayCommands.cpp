@@ -183,9 +183,10 @@ void processClearScreenCommand(DisplayCommand* cmd) {
         uint8_t blue = paramsData[2];
         color = lv_color_make(red, green, blue);
     }
+
     DEBUG_INFO("[processClearScreenCommand] Clearing screen with color.\n");
-    lv_obj_clean(lv_scr_act());
-    lv_obj_set_style_bg_color(main_screen, color, 0);
+
+    clearScreen_internal(color);
 }
 
 void processDisplayRectangleCommand(DisplayCommand* cmd) {

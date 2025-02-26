@@ -2,7 +2,6 @@
 #include "./GYW_Debug.h"
 #include "./utils/GYW_DisplayCommands.h"
 #include <Arduino.h>
-#include <future>
 
 // Initialisation du buffer global et du mutex FreeRTOS
 std::string globalDataBuffer = "";
