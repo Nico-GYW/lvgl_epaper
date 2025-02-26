@@ -1,28 +1,32 @@
 #include <Arduino.h>
 #include <lvgl.h>
-#include "peripherals/lvgl_driver.h"
 
-void setup() {
-    Serial.begin(115200);
+#include "peripherals/lvgl_driver.h"      // Utilisation du driver LVGL personnalisé
+#include "utils/GYW_DisplayCommands.h"    // Commandes spécifiques de l'affichage
+#include "utils/GYW_DisplayInternal.h"    //
+#include "blue/GYW_BLE.h"                 // Pour la connexion BLE
 
-    // Initialize LVGL
-    lv_init();
-
-    // Initialize display driver
+void setup()
+{
+    Serial.begin(115200); // Initialisation de la communication série
+    lv_init(); // Initialisation de la bibliothèque LVGL
     lvgl_display_init();
 
-    // Create a simple UI
-    lv_obj_t *label = lv_label_create(lv_scr_act());
-    lv_label_set_text(label, "Hello, World!");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, -20);
+    // Initialisation du buzzer
+    //pinMode(BUZZER_PIN, OUTPUT);
+    //digitalWrite(BUZZER_PIN, LOW);  // Désactiver le buzzer
 
-    lv_obj_t *rect = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(rect, 100, 50);
-    lv_obj_align(rect, LV_ALIGN_CENTER, 0, 30);
-    lv_obj_set_style_bg_color(rect, lv_color_black(), LV_PART_MAIN);
+    //pinMode(BL, OUTPUT);
+    //digitalWrite(BL, LOW);  // Désactiver le buzzer
+
+    // Configuration de l'affichage principal et des fonctions Bluetooth
+    initDisplayUpdateTask(); // Tâche pour mettre à jour l'affichage
+    initMainScreen_internal();
+    BLE_Init("GYW aRdent"); // Initialisation de la connexion BLE avec le nom donné
 }
 
-void loop() {
-    lv_timer_handler();
+void loop()
+{
+    lv_timer_handler(); // Traite les événements et les changements
     delay(5);
 }
