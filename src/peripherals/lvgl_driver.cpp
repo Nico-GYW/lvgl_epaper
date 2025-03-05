@@ -1,6 +1,7 @@
 #include "lvgl_driver.h"
 #include <lvgl.h>
 #include <GxEPD2_BW.h>
+#include <vector>
 
 #define LV_HOR_RES_MAX 480
 #define LVGL_TICK_PERIOD_MS 500
@@ -63,40 +64,19 @@ void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
     Serial.println("flush_display");
 
     lv_coord_t width = lv_area_get_width(area);
-    lv_coord_t height = lv_area_get_height(area);
 
-    display.setPartialWindow(area->x1, area->y1, width, height);
-    display.firstPage();
-
-    do
+    // Remplir la fenêtre partielle avec des pixels LVGL
+    for (auto y = area->y1; y <= area->y2; y++)
     {
-        Serial.println("render page");
-
-        // Remplir la fenêtre partielle avec des pixels LVGL
-        for (auto y = area->y1; y <= area->y2; y++)
+        for (auto x = area->x1; x <= area->x2; x++)
         {
-            for (auto x = area->x1; x <= area->x2; x++)
-            {
-                lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
+            lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
 
-                const double l = luminance(pixel);
-
-                uint16_t color = 0;
-
-                if (l >= 0.5)
-                {
-                    color = GxEPD_WHITE;
-                }
-                else
-                {
-                    color = GxEPD_BLACK;
-                }
-
-                display.drawPixel(x, y, color);
-            }
+            display.drawPixel(x, y, pixel.full != 0xFF ? GxEPD_BLACK : GxEPD_WHITE);
         }
     }
-    while (display.nextPage());
+
+    display.display(true);
 
     // Signaler à LVGL que le rafraîchissement est terminé
     lv_disp_flush_ready(disp);
@@ -129,6 +109,7 @@ void lvgl_display_init()
     disp_drv.rounder_cb = expand_invalidated_area;
     disp_drv.flush_cb = flush_display;
     disp_drv.full_refresh = true;
+    disp_drv.antialiasing = false;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
