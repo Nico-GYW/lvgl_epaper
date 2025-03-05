@@ -33,14 +33,35 @@ void clear_display()
     display.display(); // Rafraîchit pour appliquer la couleur blanche
 }
 
-// Callback pour la mise à jour de l’écran e-paper
-void ssd1677_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+lv_area_t pad_area(const lv_area_t& area)
 {
-    // Préparer la mise à jour de la fenêtre
-    Serial.println("ssd1677_flush triggered");
+    lv_area_t padded_area = area;
 
-    auto width = area->x2 - area->x1 + 1;
-    auto height = area->y2 - area->y1 + 1;
+    // Round down to the nearest multiple of 8.
+    padded_area.x1 = area.x1 - area.x1 % 8;
+    padded_area.y1 = area.y1 - area.y1 % 8;
+
+    // Round up to the nearest multiple of 8. -1 because the boundary is inclusive.
+    padded_area.x2 = (area.x2 + 7) / 8 * 8 - 1;
+    padded_area.y2 = (area.y2 + 7) / 8 * 8 - 1;
+
+    return padded_area;
+}
+
+void expand_invalidated_area(lv_disp_drv_t* disp_drv, lv_area_t* area)
+{
+    // Expand the area to the nearest multiple of 8.
+    area->x1 = area->x1 - area->x1 % 8;
+    area->y1 = area->y1 - area->y1 % 8;
+    area->x2 = (area->x2 + 7) / 8 * 8 - 1;
+    area->y2 = (area->y2 + 7) / 8 * 8 - 1;
+}
+
+// Callback pour la mise à jour de l’écran e-paper
+void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+{
+    lv_coord_t width = lv_area_get_width(area);
+    lv_coord_t height = lv_area_get_height(area);
 
     display.setPartialWindow(area->x1, area->y1, width, height);
     display.firstPage();
@@ -82,12 +103,17 @@ void ssd1677_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
                 // display.drawPixel(x, y, color);
             }
         }
-    } while (display.nextPage());
+    }
+    while (display.nextPage());
 
     // Signaler à LVGL que le rafraîchissement est terminé
     lv_disp_flush_ready(disp);
 }
 
+void clear_callback(struct _lv_disp_drv_t* disp_drv, uint8_t* buf, uint32_t size)
+{
+    clear_display();
+}
 
 // Fonction pour incrémenter le tick de LVGL
 void increase_lvgl_tick(void* arg)
@@ -113,7 +139,9 @@ void lvgl_display_init()
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = display.width();
     disp_drv.ver_res = display.height();
-    disp_drv.flush_cb = ssd1677_flush;
+    disp_drv.rounder_cb = expand_invalidated_area;
+    disp_drv.flush_cb = flush_display;
+    disp_drv.clear_cb = clear_callback;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 

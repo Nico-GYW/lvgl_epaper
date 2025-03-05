@@ -51,7 +51,7 @@ void DisplayCommandCharacteristicCallbacks::onWrite(BLECharacteristic* pCharacte
         }
 
         // Enfile la commande
-        enqueueDisplayCommand(&cmd);
+        process_command(cmd);
 
         // Vide le buffer global après le traitement
         globalDataBuffer.clear();

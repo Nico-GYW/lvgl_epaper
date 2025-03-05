@@ -5,6 +5,8 @@
 #include "./GYW_Debug.h"
 #include <Arduino.h>
 #include <string>
+#include <queue>
+#include "utils/mpsc.hpp"
 
 // Define virtual and physical resolution dimensions
 #define VIRTUAL_WIDTH 850
@@ -17,17 +19,20 @@ const float scale_factor_x = (float)PHYSICAL_WIDTH / VIRTUAL_WIDTH;
 const float scale_factor_y = (float)PHYSICAL_HEIGHT / VIRTUAL_HEIGHT;
 
 // Helper function to scale coordinates to physical resolution
-void scaleToPhysical(int16_t &x, int16_t &y) {
+void scaleToPhysical(int16_t& x, int16_t& y)
+{
     x = x * scale_factor_x;
     y = y * scale_factor_y;
 }
 
 // Helper function to scale font size or other size-based factors (e.g., icon scale)
-float scaleFactor(float scale) {
+float scaleFactor(float scale)
+{
     return scale * scale_factor_y;
 }
 
-uint8_t scaleFontSize(uint8_t fontSize) {
+uint8_t scaleFontSize(uint8_t fontSize)
+{
     return fontSize * scale_factor_y;
 }
 
@@ -38,70 +43,84 @@ void processDisplayRectangleCommand(DisplayCommand* cmd);
 void processSetScreenBrightnessCommand(DisplayCommand* cmd);
 void processDisplaySpinnerCommand(DisplayCommand* cmd);
 
-// Queue for display commands
-QueueHandle_t displayCommandQueue = NULL;
+// TODO(arosca): Have explicit messages for each command.
+mpsc::Channel<std::function<void()>> draw_calls;
 
-// Enqueue display command
-void enqueueDisplayCommand(DisplayCommand* cmd) {
-    if (xQueueSend(displayCommandQueue, cmd, portMAX_DELAY) != pdTRUE) {
-        DEBUG_ERROR("Failed to send display command.\n");
+void process_command(DisplayCommand& cmd)
+{
+    switch (cmd.cmdType)
+    {
+    case CMD_DISPLAY_ICON:
+        processDisplayIconCommand(&cmd);
+        break;
+    case CMD_DISPLAY_TEXT:
+        processDisplayTextCommand(&cmd);
+        break;
+    case CMD_CLEAR_SCREEN:
+        processClearScreenCommand(&cmd);
+        break;
+    case CMD_DISPLAY_RECTANGLE:
+        processDisplayRectangleCommand(&cmd);
+        break;
+    case CMD_SET_SCREEN_BRIGHTNESS:
+        processSetScreenBrightnessCommand(&cmd);
+        break;
+    case CMD_DISPLAY_SPINNER:
+        processDisplaySpinnerCommand(&cmd);
+        break;
+    default:
+        DEBUG_WARNING("Unknown display command: %d\n", cmd.cmdType);
+        break;
     }
 }
 
+
 // Display update task
-void DisplayUpdateTask(void *pvParameters) {
-    printf("[DisplayUpdateTask] Task started.\n");
-    DisplayCommand cmd;
-    while (1) {
-        if (xQueueReceive(displayCommandQueue, &cmd, portMAX_DELAY) == pdTRUE) {
-            switch (cmd.cmdType) {
-                case CMD_DISPLAY_ICON:
-                    processDisplayIconCommand(&cmd);
-                    break;
-                case CMD_DISPLAY_TEXT:
-                    processDisplayTextCommand(&cmd);
-                    break;
-                case CMD_CLEAR_SCREEN:
-                    processClearScreenCommand(&cmd);
-                    break;
-                case CMD_DISPLAY_RECTANGLE:
-                    processDisplayRectangleCommand(&cmd);
-                    break;
-                case CMD_SET_SCREEN_BRIGHTNESS:
-                    processSetScreenBrightnessCommand(&cmd);
-                    break;
-                case CMD_DISPLAY_SPINNER:
-                    processDisplaySpinnerCommand(&cmd);
-                    break;
-                default:
-                    DEBUG_WARNING("Unknown display command: %d\n", cmd.cmdType);
-                    break;
+void DisplayUpdateTask(void* pvParameters)
+{
+    while (true)
+    {
+        std::vector<std::function<void()>> functions;
+        while (true)
+        {
+            auto f = draw_calls.try_receive();
+            if (f.has_value())
+            {
+                functions.push_back(std::move(*f));
+            }
+            else
+            {
+                break;
             }
         }
-        //increase_lvgl_tick();
-        vTaskDelay(pdMS_TO_TICKS(5));
+
+        for (auto& f : functions)
+        {
+            f();
+        }
+
+        delay(1000);
     }
 }
 
 // Initialize display update task
-void initDisplayUpdateTask(void) {
-    displayCommandQueue = xQueueCreate(20, sizeof(DisplayCommand));
-    if (displayCommandQueue == NULL) {
-        DEBUG_ERROR("Failed to create displayCommandQueue.\n");
-    }
-    xTaskCreatePinnedToCore(DisplayUpdateTask, "DisplayUpdateTask", 8192, NULL, 2, NULL, 1);
+void initDisplayUpdateTask(void)
+{
+    xTaskCreatePinnedToCore(DisplayUpdateTask, "display_update_task", 8192, NULL, 2, NULL, 1);
 }
 
 // Command processing functions
 
-void processDisplayIconCommand(DisplayCommand* cmd) {
+void processDisplayIconCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
     std::string iconName = cmd->dataBuffer;
 
     int index = 0;
 
-    if (paramsLength < 2 + 2 + 4 + 1) {
+    if (paramsLength < 2 + 2 + 4 + 1)
+    {
         DEBUG_ERROR("processDisplayIconCommand: Insufficient parameters.\n");
         return;
     }
@@ -113,9 +132,9 @@ void processDisplayIconCommand(DisplayCommand* cmd) {
     scaleToPhysical(x, y);
 
     uint32_t colorValue = ((uint32_t)paramsData[index] << 24) |
-                          ((uint32_t)paramsData[index + 1] << 16) |
-                          ((uint32_t)paramsData[index + 2] << 8) |
-                          (uint32_t)paramsData[index + 3];
+        ((uint32_t)paramsData[index + 1] << 16) |
+        ((uint32_t)paramsData[index + 2] << 8) |
+        (uint32_t)paramsData[index + 3];
     index += 4;
 
     int8_t scale_byte = (int8_t)paramsData[index++];
@@ -131,17 +150,22 @@ void processDisplayIconCommand(DisplayCommand* cmd) {
     DEBUG_INFO("[processDisplayIconCommand] Position: (%d, %d)\n", x, y);
     DEBUG_INFO("[processDisplayIconCommand] Scale: %.2f\n", scale);
 
-    displayIcon_internal(iconName.c_str(), x, y, scale, color);
+    draw_calls.send([=]
+    {
+        displayIcon_internal(iconName.c_str(), x, y, scale, color);
+    });
 }
 
-void processDisplayTextCommand(DisplayCommand* cmd) {
+void processDisplayTextCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
     std::string textData = cmd->dataBuffer;
 
     int index = 0;
 
-    if (paramsLength < 2 + 2 + 5 + 1 + 4) {
+    if (paramsLength < 2 + 2 + 5 + 1 + 4)
+    {
         DEBUG_ERROR("processDisplayTextCommand: Insufficient parameters.\n");
         return;
     }
@@ -169,15 +193,20 @@ void processDisplayTextCommand(DisplayCommand* cmd) {
     DEBUG_INFO("[processDisplayTextCommand] Position: (%d, %d)\n", x, y);
     DEBUG_INFO("[processDisplayTextCommand] Font size: %d\n", fontSize);
 
-    displayText_internal(textData.c_str(), x, y, fontName, fontSize, color);
+    draw_calls.send([=]
+    {
+        displayText_internal(textData.c_str(), x, y, fontName, fontSize, color);
+    });
 }
 
-void processClearScreenCommand(DisplayCommand* cmd) {
+void processClearScreenCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
 
     lv_color_t color = lv_color_white();
-    if (paramsLength >= 4) {
+    if (paramsLength >= 4)
+    {
         uint8_t red = paramsData[0];
         uint8_t green = paramsData[1];
         uint8_t blue = paramsData[2];
@@ -186,16 +215,21 @@ void processClearScreenCommand(DisplayCommand* cmd) {
 
     DEBUG_INFO("[processClearScreenCommand] Clearing screen with color.\n");
 
-    clearScreen_internal(color);
+    draw_calls.send([=]
+    {
+        clearScreen_internal(color);
+    });
 }
 
-void processDisplayRectangleCommand(DisplayCommand* cmd) {
+void processDisplayRectangleCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
 
     int index = 0;
 
-    if (paramsLength < 2 + 2 + 2 + 2 + 4) {
+    if (paramsLength < 2 + 2 + 2 + 2 + 4)
+    {
         DEBUG_ERROR("processDisplayRectangleCommand: Insufficient parameters.\n");
         return;
     }
@@ -216,19 +250,24 @@ void processDisplayRectangleCommand(DisplayCommand* cmd) {
     uint8_t red = paramsData[index++];
     uint8_t green = paramsData[index++];
     uint8_t blue = paramsData[index++];
-    
+
     lv_color_t color = lv_color_make(red, green, blue);
 
     DEBUG_INFO("[processDisplayRectangleCommand] Rectangle at (%d, %d) size (%d, %d).\n", x, y, width, height);
 
-    displayRectangle_internal(x, y, width, height, color);
+    draw_calls.send([=]
+    {
+        displayRectangle_internal(x, y, width, height, color);
+    });
 }
 
-void processSetScreenBrightnessCommand(DisplayCommand* cmd) {
+void processSetScreenBrightnessCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
 
-    if (paramsLength < 1) {
+    if (paramsLength < 1)
+    {
         DEBUG_ERROR("processSetScreenBrightnessCommand: Insufficient parameters.\n");
         return;
     }
@@ -238,11 +277,13 @@ void processSetScreenBrightnessCommand(DisplayCommand* cmd) {
     setScreenBrightness_internal(brightness);
 }
 
-void processDisplaySpinnerCommand(DisplayCommand* cmd) {
+void processDisplaySpinnerCommand(DisplayCommand* cmd)
+{
     uint8_t* paramsData = cmd->paramsData;
     size_t paramsLength = cmd->paramsLength;
 
-    if (paramsLength < 2 + 2 + 4 + 1 + 1) {
+    if (paramsLength < 2 + 2 + 4 + 1 + 1)
+    {
         DEBUG_ERROR("processDisplaySpinnerCommand: Insufficient parameters.\n");
         return;
     }
@@ -264,7 +305,11 @@ void processDisplaySpinnerCommand(DisplayCommand* cmd) {
     float scale = scaleFactor((float)paramsData[index++] / 10.0f);
     float spins_per_second = (float)paramsData[index++] / 10.0f;
 
-    DEBUG_INFO("[processDisplaySpinnerCommand] Spinner at (%d, %d) scale %.1f, speed %.1f.\n", x, y, scale, spins_per_second);
+    DEBUG_INFO("[processDisplaySpinnerCommand] Spinner at (%d, %d) scale %.1f, speed %.1f.\n", x, y, scale,
+               spins_per_second);
 
-    displaySpinner_internal(x, y, scale, color, spins_per_second);
+    draw_calls.send([=]
+    {
+        displaySpinner_internal(x, y, scale, color, spins_per_second);
+    });
 }

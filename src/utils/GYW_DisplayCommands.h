@@ -12,7 +12,8 @@ extern "C" {
 #endif
 
 // Types de commandes pour l'affichage
-typedef enum {
+typedef enum
+{
     CMD_INIT_MAIN_SCREEN = 1,
     CMD_DISPLAY_TEXT = 0x03,
     CMD_DISPLAY_ICON = 0x02,
@@ -24,11 +25,12 @@ typedef enum {
 } DisplayCommandType;
 
 // Structure pour les commandes
-typedef struct {
+typedef struct
+{
     DisplayCommandType cmdType;
     uint8_t paramsData[256]; // Ajustez la taille si nécessaire
     size_t paramsLength;
-    char dataBuffer[256];    // Pour les données supplémentaires, comme le texte ou le nom de l'icône
+    char dataBuffer[256]; // Pour les données supplémentaires, comme le texte ou le nom de l'icône
 } DisplayCommand;
 
 // Déclare la file de commandes pour l'affichage
@@ -42,7 +44,7 @@ void initDisplayUpdateTask(void);
 /**
  * @brief Enfile une commande pour être traitée par la tâche d'affichage.
  */
-void enqueueDisplayCommand(DisplayCommand* cmd);
+void process_command(DisplayCommand& cmd);
 
 #ifdef __cplusplus
 }
