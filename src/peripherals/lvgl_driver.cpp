@@ -75,32 +75,32 @@ void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
             {
                 lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
 
-                display.drawPixel(x, y, pixel.full == 0 ? GxEPD_BLACK : GxEPD_WHITE);
+                const double l = luminance(pixel);
 
-                // const double l = luminance(pixel);
-                //
                 // Serial.println(l);
-                //
-                // uint16_t color = 0;
-                //
-                // if (pixel.full == 0xFFFFFF)
-                // {
-                //     color = GxEPD_WHITE;
-                // }
-                // else if (pixel.full == 0x000000)
-                // {
-                //     color = GxEPD_BLACK;
-                // }
-                // else if (l >= 0.5)
-                // {
-                //     color = GxEPD_LIGHTGREY;
-                // }
-                // else
-                // {
-                //     color = GxEPD_DARKGREY;
-                // }
-                //
-                // display.drawPixel(x, y, color);
+
+                uint16_t color = 0;
+
+                if (pixel.full == 0xFFFFFF)
+                {
+                    color = GxEPD_WHITE;
+                }
+                else if (pixel.full == 0x000000)
+                {
+                    color = GxEPD_BLACK;
+                }
+                else if (l >= 0.5)
+                {
+                    // color = GxEPD_LIGHTGREY;
+                    color = GxEPD_WHITE;
+                }
+                else
+                {
+                    // color = GxEPD_DARKGREY;
+                    color = GxEPD_BLACK;
+                }
+
+                display.drawPixel(x, y, color);
             }
         }
     }
@@ -157,7 +157,12 @@ void lvgl_display_init()
 
 static double luminance(lv_color_t color)
 {
-    return 0.299 * color.ch.red / 255 +
-        0.587 * color.ch.green / 255 +
-        0.114 * color.ch.blue / 255;
+    // Transform RGB565 to RGB888.
+    uint8_t r8 = (color.ch.red * 527 + 23) >> 6;
+    uint8_t g8 = (color.ch.green * 259 + 33) >> 6;
+    uint8_t b8 = (color.ch.blue * 527 + 23) >> 6;
+
+    return 0.299 * r8 / 255 +
+        0.587 * g8 / 255 +
+        0.114 * b8 / 255;
 }

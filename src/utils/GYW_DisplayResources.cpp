@@ -94,9 +94,6 @@ typedef struct {
 // Déclaration des polices avec leurs tailles
 static const FontMapping fontMappings[] = {
     // Polices Raleway
-    {"raleway", 8, &raleway_8},
-    {"raleway", 9, &raleway_8},
-    {"raleway", 10, &raleway_10},
     {"raleway", 12, &raleway_12},
     {"raleway", 14, &raleway_14},
     {"raleway", 16, &raleway_16},
