@@ -84,6 +84,12 @@ namespace mpsc
 
             return item;
         }
+
+        void clear()
+        {
+            std::scoped_lock l(lock);
+            items = {};
+        }
     };
 
     template <typename T>
@@ -99,6 +105,11 @@ namespace mpsc
         void send(T item)
         {
             state->send(std::move(item));
+        }
+
+        void clear()
+        {
+            state->clear();
         }
     };
 

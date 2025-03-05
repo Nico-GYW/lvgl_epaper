@@ -80,23 +80,11 @@ void DisplayUpdateTask(void* pvParameters)
 {
     while (true)
     {
-        std::vector<std::function<void()>> functions;
-        while (true)
+        auto f = draw_calls.try_receive();
+        if (f.has_value())
         {
-            auto f = draw_calls.try_receive();
-            if (f.has_value())
-            {
-                functions.push_back(std::move(*f));
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        for (auto& f : functions)
-        {
-            f();
+            (*f)();
+            continue;
         }
 
         delay(1000);
@@ -215,6 +203,7 @@ void processClearScreenCommand(DisplayCommand* cmd)
 
     DEBUG_INFO("[processClearScreenCommand] Clearing screen with color.\n");
 
+    draw_calls.clear();
     draw_calls.send([=]
     {
         clearScreen_internal(color);
