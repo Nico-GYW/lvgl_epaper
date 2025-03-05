@@ -4,6 +4,7 @@
 #include "../peripherals/lvgl_driver.h"
 #include "./GYW_Debug.h"
 #include <Arduino.h>
+#include <lvgl_mutex.hpp>
 #include <string>
 #include <queue>
 #include "utils/mpsc.hpp"
@@ -80,14 +81,32 @@ void DisplayUpdateTask(void* pvParameters)
 {
     while (true)
     {
-        auto f = draw_calls.try_receive();
-        if (f.has_value())
+        auto f = draw_calls.receive();
+        f();
+
+        bool delayPassed = false;
+
+        while (true)
         {
-            (*f)();
-            continue;
+            auto f = draw_calls.try_receive();
+            if (f.has_value())
+            {
+                delayPassed = false;
+                (*f)();
+                continue;
+            }
+
+            if (delayPassed)
+                break;
+
+            delay(100);
+            delayPassed = true;
         }
 
-        delay(1000);
+        Serial.println("lv_refr_now");
+
+        std::scoped_lock l(lvgl_mutex);
+        lv_refr_now(nullptr);
     }
 }
 
