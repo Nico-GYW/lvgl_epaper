@@ -22,10 +22,16 @@ constexpr size_t BUFFER_SIZE = DisplayDriverClass::WIDTH * DisplayDriverClass::H
 // Buffer de dessin pour LVGL
 static lv_disp_draw_buf_t draw_buf;
 
+static size_t area_count = 0;
+
 // Instanciation de l’écran avec la bonne classe GxEPD2
 GxEPD2_BW<DisplayDriverClass, DisplayDriverClass::HEIGHT> display(
     DisplayDriverClass(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN)
 );
+
+void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
+void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
+void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p);
 
 // Efface complètement l’écran au démarrage
 void clear_display()
@@ -35,22 +41,7 @@ void clear_display()
     display.display(); // Rafraîchit pour appliquer la couleur blanche
 }
 
-lv_area_t pad_area(const lv_area_t& area)
-{
-    lv_area_t padded_area = area;
-
-    // Round down to the nearest multiple of 8.
-    padded_area.x1 = area.x1 - area.x1 % 8;
-    padded_area.y1 = area.y1 - area.y1 % 8;
-
-    // Round up to the nearest multiple of 8. -1 because the boundary is inclusive.
-    padded_area.x2 = (area.x2 + 7) / 8 * 8 - 1;
-    padded_area.y2 = (area.y2 + 7) / 8 * 8 - 1;
-
-    return padded_area;
-}
-
-void expand_invalidated_area(lv_disp_drv_t* disp_drv, lv_area_t* area)
+void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
 {
     // Expand the area to the nearest multiple of 8.
     area->x1 = area->x1 - area->x1 % 8;
@@ -59,23 +50,62 @@ void expand_invalidated_area(lv_disp_drv_t* disp_drv, lv_area_t* area)
     area->y2 = (area->y2 + 7) / 8 * 8 - 1;
 }
 
-// Callback pour la mise à jour de l’écran e-paper
-void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+void render_start_cb(lv_disp_drv_t* disp_drv)
 {
-    Timer d("flush_display");
+    Serial.println("Render start");
+    area_count = 0;
+}
 
-    lv_coord_t width = lv_area_get_width(area);
-    lv_coord_t height = lv_area_get_height(area);
-
+// Callback pour la mise à jour de l’écran e-paper
+void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+{
     Serial.println(area->x1);
     Serial.println(area->x2);
     Serial.println(area->y1);
     Serial.println(area->y2);
 
-    // display.setPartialWindow(area->x1, area->y1, width, height);
+    area_count++;
 
-    d.stop();
-    d = Timer("draw_pixels");
+    if (area_count == 1 and lv_disp_flush_is_last(disp))
+    {
+        partial_update_one_region(disp, area, color_p);
+    }
+    else
+    {
+        partial_update_entire_screen(disp, area, color_p);
+    }
+
+    lv_disp_flush_ready(disp);
+}
+
+void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+{
+    lv_coord_t width = lv_area_get_width(area);
+    lv_coord_t height = lv_area_get_height(area);
+
+    display.setPartialWindow(area->x1, area->y1, width, height);
+
+    display.firstPage();
+    do
+    {
+        blit_lvgl_framebuffer_to_display(area, color_p);
+    }
+    while (display.nextPage());
+}
+
+void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+{
+    blit_lvgl_framebuffer_to_display(area, color_p);
+
+    if (lv_disp_flush_is_last(disp))
+    {
+        display.display(true);
+    }
+}
+
+void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p)
+{
+    lv_coord_t width = lv_area_get_width(area);
 
     // Remplir la fenêtre partielle avec des pixels LVGL
     for (auto y = area->y1; y <= area->y2; y++)
@@ -86,27 +116,6 @@ void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
             display.drawPixel(x, y, pixel.full != 0xFF ? GxEPD_BLACK : GxEPD_WHITE);
         }
     }
-
-    // display.writeImagePart(
-    //     reinterpret_cast<uint8_t*>(color_p),
-    //     area->x1, area->y1,
-    //     DisplayDriverClass::WIDTH, DisplayDriverClass::HEIGHT,
-    //     area->x1, area->y1,
-    //     width, height,
-    //     true, false, true);
-
-    if (lv_disp_flush_is_last(disp))
-    {
-        d.stop();
-        d = Timer("display");
-        display.display(true);
-    }
-
-    d.stop();
-    d = Timer("flush_ready");
-
-    // Signaler à LVGL que le rafraîchissement est terminé
-    lv_disp_flush_ready(disp);
 }
 
 // Fonction pour incrémenter le tick de LVGL
@@ -133,8 +142,9 @@ void lvgl_display_init()
     lv_disp_drv_init(&disp_drv);
     disp_drv.hor_res = display.width();
     disp_drv.ver_res = display.height();
-    disp_drv.rounder_cb = expand_invalidated_area;
-    disp_drv.flush_cb = flush_display;
+    disp_drv.rounder_cb = rounder_cp;
+    disp_drv.render_start_cb = render_start_cb;
+    disp_drv.flush_cb = flush_cb;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
