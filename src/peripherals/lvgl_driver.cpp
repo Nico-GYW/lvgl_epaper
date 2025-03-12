@@ -1,10 +1,11 @@
 #include "lvgl_driver.h"
 #include <lvgl.h>
 #include <GxEPD2_BW.h>
-#include <vector>
+#include <peripherals/GxEPD2_370_TC1_mod.h>
+#include <utils/timer.hpp>
 
 #define LV_HOR_RES_MAX 480
-#define LVGL_TICK_PERIOD_MS 500
+#define LVGL_TICK_PERIOD_MS 5
 
 // Définition des pins SPI et de l’écran e-paper
 #define EPD_SCK_PIN  5     // SPI Clock
@@ -14,17 +15,17 @@
 #define EPD_DC_PIN   3     // Data/Command (DC)
 #define EPD_BUSY_PIN 1     // Busy de l’e-paper
 
-constexpr size_t BUFFER_SIZE = GxEPD2_370_TC1::WIDTH * GxEPD2_370_TC1::HEIGHT;
+using DisplayDriverClass = GxEPD2_370_TC1_mod;
+
+constexpr size_t BUFFER_SIZE = DisplayDriverClass::WIDTH * DisplayDriverClass::HEIGHT;
 
 // Buffer de dessin pour LVGL
 static lv_disp_draw_buf_t draw_buf;
 
 // Instanciation de l’écran avec la bonne classe GxEPD2
-GxEPD2_BW<GxEPD2_370_TC1, GxEPD2_370_TC1::HEIGHT> display(
-    GxEPD2_370_TC1(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN)
+GxEPD2_BW<DisplayDriverClass, DisplayDriverClass::HEIGHT> display(
+    DisplayDriverClass(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN)
 );
-
-static double luminance(lv_color_t color);
 
 // Efface complètement l’écran au démarrage
 void clear_display()
@@ -61,9 +62,20 @@ void expand_invalidated_area(lv_disp_drv_t* disp_drv, lv_area_t* area)
 // Callback pour la mise à jour de l’écran e-paper
 void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
-    Serial.println("flush_display");
+    Timer d("flush_display");
 
     lv_coord_t width = lv_area_get_width(area);
+    lv_coord_t height = lv_area_get_height(area);
+
+    Serial.println(area->x1);
+    Serial.println(area->x2);
+    Serial.println(area->y1);
+    Serial.println(area->y2);
+
+    // display.setPartialWindow(area->x1, area->y1, width, height);
+
+    d.stop();
+    d = Timer("draw_pixels");
 
     // Remplir la fenêtre partielle avec des pixels LVGL
     for (auto y = area->y1; y <= area->y2; y++)
@@ -71,12 +83,27 @@ void flush_display(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
         for (auto x = area->x1; x <= area->x2; x++)
         {
             lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
-
             display.drawPixel(x, y, pixel.full != 0xFF ? GxEPD_BLACK : GxEPD_WHITE);
         }
     }
 
-    display.display(true);
+    // display.writeImagePart(
+    //     reinterpret_cast<uint8_t*>(color_p),
+    //     area->x1, area->y1,
+    //     DisplayDriverClass::WIDTH, DisplayDriverClass::HEIGHT,
+    //     area->x1, area->y1,
+    //     width, height,
+    //     true, false, true);
+
+    if (lv_disp_flush_is_last(disp))
+    {
+        d.stop();
+        d = Timer("display");
+        display.display(true);
+    }
+
+    d.stop();
+    d = Timer("flush_ready");
 
     // Signaler à LVGL que le rafraîchissement est terminé
     lv_disp_flush_ready(disp);
@@ -108,29 +135,15 @@ void lvgl_display_init()
     disp_drv.ver_res = display.height();
     disp_drv.rounder_cb = expand_invalidated_area;
     disp_drv.flush_cb = flush_display;
-    disp_drv.full_refresh = true;
-    disp_drv.antialiasing = false;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
     // Configuration du timer périodique pour LVGL
-    const esp_timer_create_args_t lvgl_tick_timer_args = {
-        .callback = &increase_lvgl_tick,
-        .name = "lvgl_tick"
-    };
+    esp_timer_create_args_t lvgl_tick_timer_args{};
+    lvgl_tick_timer_args.callback = &increase_lvgl_tick;
+    lvgl_tick_timer_args.name = "lvgl_tick";
+
     esp_timer_handle_t lvgl_tick_timer;
     esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer);
     esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000); // En microsecondes
-}
-
-static double luminance(lv_color_t color)
-{
-    // Transform RGB565 to RGB888.
-    uint8_t r8 = (color.ch.red * 527 + 23) >> 6;
-    uint8_t g8 = (color.ch.green * 259 + 33) >> 6;
-    uint8_t b8 = (color.ch.blue * 527 + 23) >> 6;
-
-    return 0.299 * r8 / 255 +
-        0.587 * g8 / 255 +
-        0.114 * b8 / 255;
 }
