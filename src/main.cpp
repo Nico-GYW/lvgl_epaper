@@ -2,7 +2,7 @@
 #include <lvgl.h>
 #include <mutex>
 
-#include "peripherals/lvgl_driver.h"      // Utilisation du driver LVGL personnalisé
+#include "peripherals/waveshare/lvgl_driver.h"      // Utilisation du driver LVGL personnalisé
 #include "utils/GYW_DisplayCommands.h"    // Commandes spécifiques de l'affichage
 #include "utils/GYW_DisplayInternal.h"    //
 #include "blue/GYW_BLE.h"                 // Pour la connexion BLE

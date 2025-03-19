@@ -1,7 +1,6 @@
 #include "GYW_DisplayCommands.h"
 #include "GYW_DisplayInternal.h"
 #include "GYW_DisplayResources.h"
-#include "../peripherals/lvgl_driver.h"
 #include "./GYW_Debug.h"
 #include <Arduino.h>
 #include <lvgl_mutex.hpp>

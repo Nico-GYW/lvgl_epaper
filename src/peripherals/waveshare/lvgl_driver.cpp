@@ -1,7 +1,7 @@
 #include "lvgl_driver.h"
 #include <lvgl.h>
 #include <GxEPD2_BW.h>
-#include <peripherals/GxEPD2_370_TC1_mod.h>
+#include "GxEPD2_370_TC1_mod.h"
 #include <utils/timer.hpp>
 
 #define LV_HOR_RES_MAX 480
