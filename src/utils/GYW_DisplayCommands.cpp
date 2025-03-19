@@ -99,7 +99,7 @@ void DisplayUpdateTask(void* pvParameters)
             if (delayPassed)
                 break;
 
-            delay(100);
+            delay(50);
             delayPassed = true;
         }
 

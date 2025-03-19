@@ -60,18 +60,34 @@ void render_start_cb(lv_disp_drv_t* disp_drv)
 void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
     Serial.println(area->x1);
-    Serial.println(area->x2);
     Serial.println(area->y1);
+    Serial.println(area->x2);
     Serial.println(area->y2);
+
+    auto width = lv_area_get_width(area);
+    auto height = lv_area_get_height(area);
+
+    // TODO(arosca): Why does LVGL update this area?
+    // I think it's the size of the digit pressed, but as if it were positioned at 0,0.
+    if (area->x1 == 0 && area->y1 == 0 && width <= 32 && height <= 48)
+    {
+        lv_disp_flush_ready(disp);
+        return;
+    }
 
     area_count++;
 
+    Serial.println("Area count");
+    Serial.println(area_count);
+
     if (area_count == 1 and lv_disp_flush_is_last(disp))
     {
+        auto t = Timer("partial update");
         partial_update_one_region(disp, area, color_p);
     }
     else
     {
+        auto t = Timer("full update");
         partial_update_entire_screen(disp, area, color_p);
     }
 
