@@ -29,19 +29,19 @@ GxEPD2_BW<DisplayDriverClass, DisplayDriverClass::HEIGHT> display(
     DisplayDriverClass(EPD_CS_PIN, EPD_DC_PIN, EPD_RST_PIN, EPD_BUSY_PIN)
 );
 
-void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
-void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
-void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p);
+static void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
+static void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
+static void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p);
 
 // Efface complètement l’écran au démarrage
-void clear_display()
+static void clear_display()
 {
     display.setFullWindow(); // Mode plein écran
     display.fillScreen(GxEPD_WHITE); // Efface l’écran en blanc
     display.display(); // Rafraîchit pour appliquer la couleur blanche
 }
 
-void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
+static void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
 {
     // Expand the area to the nearest multiple of 8.
     area->x1 = area->x1 - area->x1 % 8;
@@ -50,14 +50,14 @@ void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
     area->y2 = (area->y2 + 7) / 8 * 8 - 1;
 }
 
-void render_start_cb(lv_disp_drv_t* disp_drv)
+static void render_start_cb(lv_disp_drv_t* disp_drv)
 {
     Serial.println("Render start");
     area_count = 0;
 }
 
 // Callback pour la mise à jour de l’écran e-paper
-void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
     Serial.println(area->x1);
     Serial.println(area->y1);
@@ -94,7 +94,7 @@ void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
     lv_disp_flush_ready(disp);
 }
 
-void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+static void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
     lv_coord_t width = lv_area_get_width(area);
     lv_coord_t height = lv_area_get_height(area);
@@ -109,7 +109,7 @@ void partial_update_one_region(lv_disp_drv_t* disp, const lv_area_t* area, lv_co
     while (display.nextPage());
 }
 
-void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+static void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
     blit_lvgl_framebuffer_to_display(area, color_p);
 
@@ -119,7 +119,7 @@ void partial_update_entire_screen(lv_disp_drv_t* disp, const lv_area_t* area, lv
     }
 }
 
-void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p)
+static void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p)
 {
     lv_coord_t width = lv_area_get_width(area);
 
@@ -135,7 +135,7 @@ void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p
 }
 
 // Fonction pour incrémenter le tick de LVGL
-void increase_lvgl_tick(void* arg)
+static void increase_lvgl_tick(void* arg)
 {
     lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }

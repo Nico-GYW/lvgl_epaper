@@ -4,14 +4,6 @@
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Astdio_002Eh_002Fl_003A_002E_002E_003F_002E_002E_003Ftoolchains_003Fgcc_002Darm_002Dnone_002Deabi_002D6_002D2017_002Dq2_002Dupdate_003Farm_002Dnone_002Deabi_003Finclude_003Fstdio_002Eh/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003Areent_002Eh_002Fl_003A_002E_002E_003F_002E_002E_003Ftoolchains_003Fgcc_002Darm_002Dnone_002Deabi_002D6_002D2017_002Dq2_002Dupdate_003Farm_002Dnone_002Deabi_003Finclude_003Fsys_003Freent_002Eh/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
     <option name="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=8BC9CEB8_002D8B4A_002D11D0_002D8D11_002D00A0C91BC942_002Fd_003Asrc_002Fd_003Auser_005Fprog_002Ff_003Agit_005Fhash_002Ec/@EntryIndexedValue" value="ExplicitlyExcluded" type="string" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppTooWideScopeInitStatement/@EntryIndexedValue" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppParameterMayBeConst/@EntryIndexedValue" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppDFAEndlessLoop/@EntryIndexedValue" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppTooWideScope/@EntryIndexedValue" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppParameterMayBeConst/@EntryIndexRemoved" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppTooWideScope/@EntryIndexRemoved" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppTooWideScopeInitStatement/@EntryIndexRemoved" />
-    <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppDFAEndlessLoop/@EntryIndexRemoved" />
     <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppLocalVariableMayBeConst/@EntryIndexedValue" value="HINT" type="string" />
     <option name="/Default/CodeInspection/Highlighting/InspectionSeverities/=CppLocalVariableMayBeConst/@EntryIndexRemoved" />
   </component>

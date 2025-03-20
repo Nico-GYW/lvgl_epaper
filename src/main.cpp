@@ -2,7 +2,7 @@
 #include <lvgl.h>
 #include <mutex>
 
-#include "peripherals/waveshare/lvgl_driver.h"      // Utilisation du driver LVGL personnalisé
+#include "peripherals/goodisplay/lvgl_driver.hpp"      // Utilisation du driver LVGL personnalisé
 #include "utils/GYW_DisplayCommands.h"    // Commandes spécifiques de l'affichage
 #include "utils/GYW_DisplayInternal.h"    //
 #include "blue/GYW_BLE.h"                 // Pour la connexion BLE
@@ -11,8 +11,11 @@
 void setup()
 {
     Serial.begin(115200); // Initialisation de la communication série
+
     lv_init(); // Initialisation de la bibliothèque LVGL
-    lvgl_display_init();
+    lvgl_display_init_goodisplay();
+
+    return;
 
     // Initialisation du buzzer
     //pinMode(BUZZER_PIN, OUTPUT);
