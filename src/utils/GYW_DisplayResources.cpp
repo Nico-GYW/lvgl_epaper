@@ -4,10 +4,11 @@
 #include "./assets/icon/Icons.h"
 #include <string.h>
 #include <stdio.h>
-
+#include <unordered_map>
 
 // Structure pour mapper les noms aux icônes
-typedef struct {
+typedef struct
+{
     const char* name;
     const lv_img_dsc_t* img_dsc;
 } IconMapping;
@@ -61,7 +62,8 @@ static const IconMapping iconMappings[] = {
 };
 
 // Fonction pour obtenir l'icône en fonction du nom
-const lv_img_dsc_t* getIconByName(const char* iconName) {
+const lv_img_dsc_t* getIconByName(const char* iconName)
+{
     // Créer une copie du nom de l'icône pour manipulation
     char iconNameNoExt[64];
     strncpy(iconNameNoExt, iconName, sizeof(iconNameNoExt) - 1);
@@ -69,13 +71,16 @@ const lv_img_dsc_t* getIconByName(const char* iconName) {
 
     // Retirer l'extension '.svg' si présente
     char* dotPosition = strstr(iconNameNoExt, ".svg");
-    if (dotPosition != NULL) {
+    if (dotPosition != NULL)
+    {
         *dotPosition = '\0'; // Terminer la chaîne à l'endroit du '.'
     }
 
     // Parcourir le tableau de mappage des icônes
-    for (size_t i = 0; i < sizeof(iconMappings)/sizeof(iconMappings[0]); i++) {
-        if (strcmp(iconNameNoExt, iconMappings[i].name) == 0) {
+    for (size_t i = 0; i < sizeof(iconMappings) / sizeof(iconMappings[0]); i++)
+    {
+        if (strcmp(iconNameNoExt, iconMappings[i].name) == 0)
+        {
             return iconMappings[i].img_dsc;
         }
     }
@@ -84,7 +89,8 @@ const lv_img_dsc_t* getIconByName(const char* iconName) {
 }
 
 
-typedef struct {
+typedef struct
+{
     const char* name;
     uint8_t size;
     const lv_font_t* font;
@@ -140,14 +146,21 @@ static const FontMapping fontMappings[] = {
 };
 
 // Fonction pour obtenir la police en fonction du nom et de la taille
-const lv_font_t* getFont(const char* fontName, uint8_t fontSize) {
+const lv_font_t* getFont(const char* fontName, uint8_t fontSize)
+{
+    if (fontSize > 48)
+    {
+        return &lv_font_montserrat_16; // Police par défaut
+    }
+
     // Parcourir le tableau de mappage des polices
-    for (size_t i = 0; i < sizeof(fontMappings) / sizeof(fontMappings[0]); i++) {
-        if (strcmp(fontName, fontMappings[i].name) == 0 && fontSize == fontMappings[i].size) {
+    for (size_t i = 0; i < sizeof(fontMappings) / sizeof(fontMappings[0]); i++)
+    {
+        if (strcmp(fontName, fontMappings[i].name) == 0 && fontSize == fontMappings[i].size)
+        {
             return fontMappings[i].font;
         }
     }
 
-    printf("[getFont] Police '%s' de taille %d non reconnue. Utilisation de la police par défaut.\n", fontName, fontSize);
-    return &lv_font_montserrat_16; // Police par défaut
+    return getFont(fontName, fontSize + 1);
 }

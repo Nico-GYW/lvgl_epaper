@@ -15,6 +15,7 @@ namespace GooDisplay
     void Epaper_Write_Command(unsigned char cmd);
     void Epaper_Write_Data(unsigned char data);
 
+    void EPD_Update_Fast();
     void EPD_Part_Update();
     void EPD_Update();
     void EPD_DeepSleep();

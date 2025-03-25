@@ -1,5 +1,6 @@
 #include "lvgl_driver.hpp"
 
+#include <array>
 #include <lvgl.h>
 #include <utils/timer.hpp>
 #include <esp_timer.h>
@@ -9,30 +10,12 @@
 
 #define LVGL_TICK_PERIOD_MS 5
 
-constexpr size_t DISPLAY_WIDTH = 264;
-constexpr size_t DISPLAY_HEIGHT = 176;
-constexpr size_t BUFFER_SIZE = DISPLAY_WIDTH * DISPLAY_HEIGHT;
+constexpr size_t BUFFER_SIZE = GooDisplay::DISPLAY_WIDTH * GooDisplay::DISPLAY_HEIGHT;
 
 // Buffer de dessin pour LVGL
 static lv_disp_draw_buf_t draw_buf;
 
-static void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
-{
-    // Expand the area to the nearest multiple of 8.
-    area->x1 = area->x1 - area->x1 % 8;
-    area->y1 = area->y1 - area->y1 % 8;
-    area->x2 = (area->x2 + 7) / 8 * 8 - 1;
-    area->y2 = (area->y2 + 7) / 8 * 8 - 1;
-}
-
-static void render_start_cb(lv_disp_drv_t* disp_drv)
-{
-//    Serial.println("Render start");
-//    area_count = 0;
-}
-
-// Callback pour la mise à jour de l’écran e-paper
-static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+static void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p)
 {
     lv_coord_t width = lv_area_get_width(area);
 
@@ -42,12 +25,42 @@ static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* col
         for (auto x = area->x1; x <= area->x2; x++)
         {
             lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
-//
+
+            if (pixel.full == 0xED || pixel.full == 0xE8)
+            {
+                GooDisplay::draw_pixel(x, y, GooDisplay::Color::WHITE);
+            }
+            else
+            {
+                GooDisplay::draw_pixel(x, y,
+                                       pixel.full == 0xFF ? GooDisplay::Color::WHITE : GooDisplay::Color::BLACK);
+            }
         }
     }
 
+    GooDisplay::partial_draw(0, GooDisplay::DISPLAY_WIDTH - 1, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
+}
+
+static void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
+{
+    // Expand the area to the nearest multiple of 8.
+    // area->x1 = area->x1 - area->x1 % 8;
+    // area->y1 = area->y1 - area->y1 % 8;
+    // area->x2 = (area->x2 + 7) / 8 * 8 - 1;
+    // area->y2 = (area->y2 + 7) / 8 * 8 - 1;
+}
+
+static void render_start_cb(lv_disp_drv_t* disp_drv)
+{
+    //    Serial.println("Render start");
+    //    area_count = 0;
+}
+
+// Callback pour la mise à jour de l’écran e-paper
+static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
+{
+    blit_lvgl_framebuffer_to_display(area, color_p);
     lv_disp_flush_ready(disp);
-    return;
 }
 
 // Fonction pour incrémenter le tick de LVGL
@@ -65,14 +78,38 @@ void lvgl_display_init_goodisplay()
 
     GooDisplay::clear_screen(GooDisplay::Color::WHITE);
 
+    // for (size_t i = 0; i < 100; i++)
+    // {
+    //     GooDisplay::draw_pixel(i, 100, GooDisplay::Color::BLACK);
+    //     GooDisplay::draw_pixel(i, 101, GooDisplay::Color::BLACK);
+    //     GooDisplay::draw_pixel(i, 102, GooDisplay::Color::BLACK);
+    // }
+
+    // GooDisplay::fill(GooDisplay::Color::BLACK);
+
+    // GooDisplay::partial_draw(0, 0, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
+
+    // const unsigned char buffer[] = {
+    //     (unsigned char)0b00000000,
+    //     (unsigned char)0b00000000,
+    //     (unsigned char)0b00000000,
+    //     (unsigned char)0b00101011,
+    //     (unsigned char)0b01010101,
+    //     (unsigned char)0b00101011,
+    //     (unsigned char)0b01010101,
+    //     (unsigned char)0b01111111,
+    // };
+
+    // GooDisplay::partial_draw(0, GooDisplay::DISPLAY_WIDTH - 1, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
+
     // Initialisation du buffer de dessin LVGL
     lv_disp_draw_buf_init(&draw_buf, buf, nullptr, BUFFER_SIZE);
 
     // Configuration du driver LVGL
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = DISPLAY_WIDTH;
-    disp_drv.ver_res = DISPLAY_HEIGHT;
+    disp_drv.hor_res = GooDisplay::DISPLAY_WIDTH;
+    disp_drv.ver_res = GooDisplay::DISPLAY_HEIGHT;
     disp_drv.rounder_cb = rounder_cp;
     disp_drv.render_start_cb = render_start_cb;
     disp_drv.flush_cb = flush_cb;

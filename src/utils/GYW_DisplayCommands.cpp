@@ -11,8 +11,10 @@
 // Define virtual and physical resolution dimensions
 #define VIRTUAL_WIDTH 854
 #define VIRTUAL_HEIGHT 480
-#define PHYSICAL_WIDTH 480
-#define PHYSICAL_HEIGHT 280
+#define PHYSICAL_WIDTH 264
+// #define PHYSICAL_WIDTH 480
+#define PHYSICAL_HEIGHT 176
+// #define PHYSICAL_HEIGHT 280
 
 // Scaling factors based on the virtual and physical dimensions
 const float scale_factor_x = (float)PHYSICAL_WIDTH / VIRTUAL_WIDTH;

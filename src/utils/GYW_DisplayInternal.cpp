@@ -27,7 +27,7 @@ void initMainScreen_internal()
     clearScreen_internal(lv_color_white());
     // Afficher l'icône du logo
     lv_color_t logo_color = lv_color_black();
-    displayIcon_internal("GYW", 450, 230, 2, logo_color);
+    displayIcon_internal("GYW", 100, 100, 2, logo_color);
 
     // Afficher le texte "Get Your Way"
     const char* text = "Get Your Way";

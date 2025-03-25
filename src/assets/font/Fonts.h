@@ -2,6 +2,8 @@
 #define FONTS_H
 
 // Déclaration des polices pour une utilisation globale
+extern const lv_font_t raleway_8;
+extern const lv_font_t raleway_10;
 extern const lv_font_t raleway_12;
 extern const lv_font_t raleway_14;
 extern const lv_font_t raleway_16;

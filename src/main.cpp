@@ -15,7 +15,7 @@ void setup()
     lv_init(); // Initialisation de la bibliothèque LVGL
     lvgl_display_init_goodisplay();
 
-    return;
+    // return;
 
     // Initialisation du buzzer
     //pinMode(BUZZER_PIN, OUTPUT);
@@ -26,7 +26,7 @@ void setup()
 
     // Configuration de l'affichage principal et des fonctions Bluetooth
     initDisplayUpdateTask(); // Tâche pour mettre à jour l'affichage
-    initMainScreen_internal();
+    // initMainScreen_internal();
 
     // Utiliser l'écran par défaut
     main_screen = lv_scr_act();
@@ -35,15 +35,15 @@ void setup()
 
     // Afficher l'icône du logo
     lv_color_t logo_color = lv_color_black();
-    displayIcon_internal("GYW", 180, 170, 1.5, logo_color);
+    displayIcon_internal("GYW", 150, 100, 1.5, logo_color);
 
     // Afficher le texte "Get Your Way"
-    const char* text = "Get Your Way";
-    int16_t text_y = 230;
-    uint8_t fontSize = 20;
-    lv_color_t text_color = lv_color_black();
+    // const char* text = "Get Your Way";
+    // int16_t text_y = 230;
+    // uint8_t fontSize = 20;
+    // lv_color_t text_color = lv_color_black();
 
-    displayText_internal(text, 80, 190, "montserrat", fontSize, text_color);
+    // displayText_internal(text, 10, 0, "montserrat", fontSize, text_color);
 
     BLE_Init("GYW aRdent"); // Initialisation de la connexion BLE avec le nom donné
 }

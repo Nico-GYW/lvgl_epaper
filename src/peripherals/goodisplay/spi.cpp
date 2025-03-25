@@ -21,7 +21,7 @@ namespace GooDisplay
     void EPD_W21_RST_1() { digitalWrite(RES_Pin,HIGH); }
     static int isEPD_W21_BUSY() { return digitalRead(BUSY_Pin); }
 
-    static void Epaper_READBUSY(void)
+    static void Epaper_READBUSY()
     {
         while (true)
         {
@@ -109,6 +109,14 @@ namespace GooDisplay
     {
         Epaper_Write_Command(0x22); //Display Update Control
         Epaper_Write_Data(0xF7);
+        Epaper_Write_Command(0x20); //Activate Display Update Sequence
+        Epaper_READBUSY();
+    }
+
+    void EPD_Update_Fast(void)
+    {
+        Epaper_Write_Command(0x22); //Display Update Control
+        Epaper_Write_Data(0xC7);
         Epaper_Write_Command(0x20); //Activate Display Update Sequence
         Epaper_READBUSY();
     }
