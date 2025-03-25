@@ -136,7 +136,7 @@ void displayRectangle_internal(int16_t x, int16_t y, uint16_t width, uint16_t he
     DEBUG_INFO("  Couleur : 0x%04X\n", color.full);
 
     lv_obj_t* rect = lv_obj_create(main_screen);
-    if (rect == NULL)
+    if (rect == nullptr)
     {
         DEBUG_ERROR("[displayRectangle_internal] Échec de la création de l'objet rectangle.\n");
         return;
@@ -146,6 +146,7 @@ void displayRectangle_internal(int16_t x, int16_t y, uint16_t width, uint16_t he
 
     lv_obj_set_style_bg_color(rect, color, 0);
     lv_obj_set_style_border_width(rect, 0, 0);
+    lv_obj_set_style_radius(rect, 0, LV_PART_MAIN);
 }
 
 void setScreenBrightness_internal(uint8_t brightness)

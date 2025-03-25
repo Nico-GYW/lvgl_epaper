@@ -129,7 +129,15 @@ static void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* 
         for (auto x = area->x1; x <= area->x2; x++)
         {
             lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
-            display.drawPixel(x, y, pixel.full != 0xFF ? GxEPD_BLACK : GxEPD_WHITE);
+
+            if (pixel.full == 0xED || pixel.full == 0xE8)
+            {
+                display.drawPixel(x, y, GxEPD_WHITE);
+            }
+            else
+            {
+                display.drawPixel(x, y, pixel.full == 0xFF ? GxEPD_WHITE : GxEPD_BLACK);
+            }
         }
     }
 }

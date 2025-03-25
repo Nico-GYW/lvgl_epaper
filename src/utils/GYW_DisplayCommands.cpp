@@ -66,7 +66,7 @@ void process_command(DisplayCommand& cmd)
         processSetScreenBrightnessCommand(&cmd);
         break;
     case CMD_DISPLAY_SPINNER:
-        processDisplaySpinnerCommand(&cmd);
+        // processDisplaySpinnerCommand(&cmd);
         break;
     default:
         DEBUG_WARNING("Unknown display command: %d\n", cmd.cmdType);
@@ -98,7 +98,7 @@ void DisplayUpdateTask(void* pvParameters)
             if (delayPassed)
                 break;
 
-            delay(50);
+            delay(100);
             delayPassed = true;
         }
 
@@ -257,8 +257,18 @@ void processDisplayRectangleCommand(DisplayCommand* cmd)
     uint8_t red = paramsData[index++];
     uint8_t green = paramsData[index++];
     uint8_t blue = paramsData[index++];
+    uint8_t alpha = paramsData[index++];
 
-    lv_color_t color = lv_color_make(red, green, blue);
+    lv_color_t color;
+
+    // if (alpha == 0)
+    // {
+        color = lv_color_white();
+    // }
+    // else
+    // {
+        // color = lv_color_make(red, green, blue);
+    // }
 
     DEBUG_INFO("[processDisplayRectangleCommand] Rectangle at (%d, %d) size (%d, %d).\n", x, y, width, height);
 
