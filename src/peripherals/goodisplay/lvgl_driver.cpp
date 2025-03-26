@@ -4,6 +4,7 @@
 #include <lvgl.h>
 #include <utils/timer.hpp>
 #include <esp_timer.h>
+#include <HardwareSerial.h>
 
 #include "spi.hpp"
 #include "commands.hpp"
@@ -15,39 +16,13 @@ constexpr size_t BUFFER_SIZE = GooDisplay::DISPLAY_WIDTH * GooDisplay::DISPLAY_H
 // Buffer de dessin pour LVGL
 static lv_disp_draw_buf_t draw_buf;
 
-static void blit_lvgl_framebuffer_to_display(const lv_area_t* area, lv_color_t* color_p)
-{
-    lv_coord_t width = lv_area_get_width(area);
-
-    // Remplir la fenêtre partielle avec des pixels LVGL
-    for (auto y = area->y1; y <= area->y2; y++)
-    {
-        for (auto x = area->x1; x <= area->x2; x++)
-        {
-            lv_color_t pixel = color_p[(y - area->y1) * width + (x - area->x1)];
-
-            if (pixel.full == 0xED || pixel.full == 0xE8)
-            {
-                GooDisplay::draw_pixel(x, y, GooDisplay::Color::WHITE);
-            }
-            else
-            {
-                GooDisplay::draw_pixel(x, y,
-                                       pixel.full == 0xFF ? GooDisplay::Color::WHITE : GooDisplay::Color::BLACK);
-            }
-        }
-    }
-
-    GooDisplay::partial_draw(0, GooDisplay::DISPLAY_WIDTH - 1, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
-}
-
 static void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
 {
     // Expand the area to the nearest multiple of 8.
-    // area->x1 = area->x1 - area->x1 % 8;
-    // area->y1 = area->y1 - area->y1 % 8;
-    // area->x2 = (area->x2 + 7) / 8 * 8 - 1;
-    // area->y2 = (area->y2 + 7) / 8 * 8 - 1;
+    area->x1 = area->x1 - area->x1 % 8;
+    area->y1 = area->y1 - area->y1 % 8;
+    area->x2 = (area->x2 + 7) / 8 * 8 - 1;
+    area->y2 = (area->y2 + 7) / 8 * 8 - 1;
 }
 
 static void render_start_cb(lv_disp_drv_t* disp_drv)
@@ -59,7 +34,21 @@ static void render_start_cb(lv_disp_drv_t* disp_drv)
 // Callback pour la mise à jour de l’écran e-paper
 static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
-    blit_lvgl_framebuffer_to_display(area, color_p);
+    Serial.println("flush callback");
+    Serial.println("area size");
+    Serial.println(area->x1);
+    Serial.println(area->y1);
+    Serial.println(area->x2);
+    Serial.println(area->y2);
+
+    GooDisplay::partial_draw(color_p, area);
+
+    if (lv_disp_flush_is_last(disp))
+    {
+        Serial.println("update");
+        GooDisplay::partial_update();
+    }
+
     lv_disp_flush_ready(disp);
 }
 
@@ -114,6 +103,7 @@ void lvgl_display_init_goodisplay()
     disp_drv.render_start_cb = render_start_cb;
     disp_drv.flush_cb = flush_cb;
     disp_drv.draw_buf = &draw_buf;
+    disp_drv.direct_mode = true;
     lv_disp_drv_register(&disp_drv);
 
     // Configuration du timer périodique pour LVGL

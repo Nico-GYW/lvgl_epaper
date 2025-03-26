@@ -99,50 +99,32 @@ typedef struct
 
 // Déclaration des polices avec leurs tailles
 static const FontMapping fontMappings[] = {
-    // Polices Raleway
-    {"raleway", 12, &raleway_12},
-    {"raleway", 14, &raleway_14},
-    {"raleway", 16, &raleway_16},
-    {"raleway", 18, &raleway_18},
-    {"raleway", 20, &raleway_20},
-    {"raleway", 22, &raleway_22},
-    {"raleway", 24, &raleway_24},
-    {"raleway", 26, &raleway_26},
-    {"raleway", 28, &raleway_28},
-    {"raleway", 30, &raleway_30},
-    {"raleway", 32, &raleway_32},
-    {"raleway", 34, &raleway_34},
-    {"raleway", 36, &raleway_36},
-    {"raleway", 38, &raleway_38},
-    {"raleway", 40, &raleway_40},
-    {"raleway", 42, &raleway_42},
-    {"raleway", 44, &raleway_44},
-    {"raleway", 46, &raleway_46},
-    {"raleway", 48, &raleway_48},
+    // Polices Roboto Mono
+    {"roboto_mono_bold", 12, &roboto_mono_bold_12},
+    {"roboto_mono_bold", 14, &roboto_mono_bold_14},
+    {"roboto_mono_bold", 16, &roboto_mono_bold_16},
+    {"roboto_mono_bold", 18, &roboto_mono_bold_18},
+    {"roboto_mono_bold", 20, &roboto_mono_bold_20},
+    {"roboto_mono_bold", 22, &roboto_mono_bold_22},
+    {"roboto_mono_bold", 24, &roboto_mono_bold_24},
+    {"roboto_mono_bold", 26, &roboto_mono_bold_26},
+    {"roboto_mono_bold", 28, &roboto_mono_bold_28},
+    {"roboto_mono_bold", 30, &roboto_mono_bold_30},
+    {"roboto_mono_bold", 32, &roboto_mono_bold_32},
+    {"roboto_mono_bold", 34, &roboto_mono_bold_34},
 
-    // Polices Montserrat
-    {"montserrat", 8, &lv_font_montserrat_8},
-    {"montserrat", 10, &lv_font_montserrat_10},
-    {"montserrat", 12, &lv_font_montserrat_12},
-    {"montserrat", 14, &lv_font_montserrat_14},
-    {"montserrat", 16, &lv_font_montserrat_16},
-    {"montserrat", 18, &lv_font_montserrat_18},
-    {"montserrat", 20, &lv_font_montserrat_20},
-    {"montserrat", 22, &lv_font_montserrat_22},
-    {"montserrat", 24, &lv_font_montserrat_24},
-    {"montserrat", 26, &lv_font_montserrat_26},
-    {"montserrat", 28, &lv_font_montserrat_28},
-    {"montserrat", 30, &lv_font_montserrat_30},
-    {"montserrat", 32, &lv_font_montserrat_32},
-    {"montserrat", 34, &lv_font_montserrat_34},
-    {"montserrat", 36, &lv_font_montserrat_36},
-    {"montserrat", 38, &lv_font_montserrat_38},
-    {"montserrat", 40, &lv_font_montserrat_40},
-    {"montserrat", 42, &lv_font_montserrat_42},
-    {"montserrat", 44, &lv_font_montserrat_44},
-    {"montserrat", 46, &lv_font_montserrat_46},
-    {"montserrat", 48, &lv_font_montserrat_48}
-    // Ajoutez d'autres polices et tailles ici si nécessaire
+    {"roboto_mono_medium", 12, &roboto_mono_medium_12},
+    {"roboto_mono_medium", 14, &roboto_mono_medium_14},
+    {"roboto_mono_medium", 16, &roboto_mono_medium_16},
+    {"roboto_mono_medium", 18, &roboto_mono_medium_18},
+    {"roboto_mono_medium", 20, &roboto_mono_medium_20},
+    {"roboto_mono_medium", 22, &roboto_mono_medium_22},
+    {"roboto_mono_medium", 24, &roboto_mono_medium_24},
+    {"roboto_mono_medium", 26, &roboto_mono_medium_26},
+    {"roboto_mono_medium", 28, &roboto_mono_medium_28},
+    {"roboto_mono_medium", 30, &roboto_mono_medium_30},
+    {"roboto_mono_medium", 32, &roboto_mono_medium_32},
+    {"roboto_mono_medium", 34, &roboto_mono_medium_34},
 };
 
 // Fonction pour obtenir la police en fonction du nom et de la taille
@@ -150,7 +132,7 @@ const lv_font_t* getFont(const char* fontName, uint8_t fontSize)
 {
     if (fontSize > 48)
     {
-        return &lv_font_montserrat_16; // Police par défaut
+        return &roboto_mono_bold_16; // Police par défaut
     }
 
     // Parcourir le tableau de mappage des polices

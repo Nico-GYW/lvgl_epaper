@@ -55,12 +55,15 @@ void displayText_internal(const char* text, int16_t x, int16_t y, const char* fo
         return;
     }
     lv_label_set_text(label, text);
-    lv_obj_align(label, LV_ALIGN_TOP_LEFT, x, y);
+    // TODO(arosca): This is a workaround for bad alignment.
+    lv_obj_align(label, LV_ALIGN_TOP_LEFT, x + 10, y + 8);
 
     lv_obj_set_style_text_color(label, color, 0);
 
+    std::string f = strcmp(text, "robmn") == 0 ? "roboto_mono_medium" : "roboto_mono_bold";
+
     // Sélection de la police en fonction de la taille
-    const lv_font_t* font = getFont("raleway", fontSize); // à changer si on veut une autre font
+    const lv_font_t* font = getFont(f.c_str(), fontSize); // à changer si on veut une autre font
     if (font == NULL)
     {
         DEBUG_WARNING(
