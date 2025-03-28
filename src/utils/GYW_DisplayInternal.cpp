@@ -26,15 +26,15 @@ void initMainScreen_internal()
 
     clearScreen_internal(lv_color_white());
     // Afficher l'icône du logo
-    lv_color_t logo_color = lv_color_black();
-    displayIcon_internal("GYW", 450, 230, 2, logo_color);
+    //lv_color_t logo_color = lv_color_black();
+    //displayIcon_internal("GYW", 450, 230, 2, logo_color);
 
     // Afficher le texte "Get Your Way"
-    const char* text = "Get Your Way";
+    //const char* text = "Get Your Way";
 
-    lv_color_t text_color = lv_color_black();
+    //lv_color_t text_color = lv_color_black();
 
-    displayText_internal(text, 300, 280, "montserrat", 30, text_color);
+    //displayText_internal(text, 300, 280, "montserrat", 30, text_color);
 }
 
 void displayText_internal(const char* text, int16_t x, int16_t y, const char* fontName, uint8_t fontSize,

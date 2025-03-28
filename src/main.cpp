@@ -32,7 +32,7 @@ void setup()
 
     // Afficher l'icône du logo
     lv_color_t logo_color = lv_color_black();
-    displayIcon_internal("GYW", 180, 170, 1.5, logo_color);
+    displayIcon_internal("GYW", 280, 140, 1.5, logo_color);
 
     // Afficher le texte "Get Your Way"
     const char* text = "Get Your Way";
@@ -40,7 +40,7 @@ void setup()
     uint8_t fontSize = 20;
     lv_color_t text_color = lv_color_black();
 
-    displayText_internal(text, 80, 190, "montserrat", fontSize, text_color);
+    displayText_internal(text, 180, 170, "montserrat", fontSize, text_color);
 
     BLE_Init("GYW aRdent"); // Initialisation de la connexion BLE avec le nom donné
 }
