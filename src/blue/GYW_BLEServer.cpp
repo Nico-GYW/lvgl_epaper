@@ -3,6 +3,7 @@
 
 #include "GYW_BLEServer.h"
 #include "GYW_BLECallbacks.h"
+#include <peripherals/waveshare/lvgl_driver.h>
 
 // Variables globales pour la connexion et la gestion BLE
 BLEServer* pServer = nullptr;
@@ -45,6 +46,7 @@ class ServerCallbacks : public BLEServerCallbacks
     {
         deviceConnected = true;
         Serial.printf("Appareil BLE connecté.\n");
+        clear_display();
     }
 
     void onDisconnect(BLEServer* pServer) override

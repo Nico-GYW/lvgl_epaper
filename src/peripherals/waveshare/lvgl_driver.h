@@ -9,6 +9,9 @@ void lvgl_display_init();
 // Function to flush LVGL's buffer to the ePaper display
 void lvgl_display_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p);
 
+//
+void clear_display();
+
 // Function to control partial/full refresh
 void lvgl_update_display(bool full_refresh);
 
