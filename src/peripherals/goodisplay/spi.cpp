@@ -104,7 +104,6 @@ namespace GooDisplay
         Epaper_READBUSY();
     }
 
-
     void EPD_Update(void)
     {
         Epaper_Write_Command(0x22); //Display Update Control

@@ -21,12 +21,16 @@ static void rounder_cp(lv_disp_drv_t* disp_drv, lv_area_t* area)
     // Expand the area to the nearest multiple of 8.
     area->x1 = area->x1 - area->x1 % 8;
     area->y1 = area->y1 - area->y1 % 8;
+    // TODO(arosca): 0 doesn't work
     area->x2 = (area->x2 + 7) / 8 * 8 - 1;
     area->y2 = (area->y2 + 7) / 8 * 8 - 1;
 }
 
+static std::vector<GooDisplay::PartialFramebuffer> partial_framebuffers;
+
 static void render_start_cb(lv_disp_drv_t* disp_drv)
 {
+    GooDisplay::begin_partial_draw();
     //    Serial.println("Render start");
     //    area_count = 0;
 }
@@ -41,12 +45,29 @@ static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* col
     Serial.println(area->x2);
     Serial.println(area->y2);
 
-    GooDisplay::partial_draw(color_p, area);
+    auto width = lv_area_get_width(area);
+    auto height = lv_area_get_height(area);
+
+    auto partial_framebuffer = GooDisplay::PartialFramebuffer{
+        .buffer = GooDisplay::transform_buffer(color_p, width, height),
+        .x = static_cast<uint16_t>(area->x1),
+        .y = static_cast<uint16_t>(area->y1),
+        .width = static_cast<uint16_t>(width),
+        .height = static_cast<uint16_t>(height),
+    };
+
+    partial_draw(partial_framebuffer);
+    partial_framebuffers.push_back(std::move(partial_framebuffer));
 
     if (lv_disp_flush_is_last(disp))
     {
         Serial.println("update");
         GooDisplay::partial_update();
+
+        for (const auto& framebuffer : partial_framebuffers)
+            partial_draw(framebuffer);
+
+        partial_framebuffers.clear();
     }
 
     lv_disp_flush_ready(disp);
@@ -103,7 +124,6 @@ void lvgl_display_init_goodisplay()
     disp_drv.render_start_cb = render_start_cb;
     disp_drv.flush_cb = flush_cb;
     disp_drv.draw_buf = &draw_buf;
-    disp_drv.direct_mode = true;
     lv_disp_drv_register(&disp_drv);
 
     // Configuration du timer périodique pour LVGL

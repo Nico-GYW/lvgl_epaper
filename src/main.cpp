@@ -13,74 +13,74 @@
 
 extern const uint8_t GYW_map[];
 
-void setup_()
-{
-    constexpr size_t BUFFER_SIZE = GooDisplay::DISPLAY_WIDTH * GooDisplay::DISPLAY_HEIGHT;
-
-    Serial.begin(115200); // Initialisation de la communication série
-
-    auto buf = new lv_color_t[BUFFER_SIZE]; // Taille du buffer (ajuster selon la RAM disponible)
-
-    memset(buf, 0xFF, BUFFER_SIZE * sizeof(lv_color_t));
-
-    GooDisplay::init_spi();
-    GooDisplay::EPD_HW_Init_Fast();
-
-    GooDisplay::clear_screen(GooDisplay::Color::WHITE);
-
-    // for (auto x = 32; x < 64; x++)
-    // {
-    //     for (auto y = 32; y < 64; y++)
-    //     {
-    //         buf[x + y * GooDisplay::DISPLAY_WIDTH] = lv_color_black();
-    //     }
-    // }
-
-    // for (auto x = 0; x < 32; x++)
-    // {
-    //     for (auto y = 0; y < 32; y++)
-    //     {
-    //         buf[x + y * GooDisplay::DISPLAY_WIDTH] = lv_color_black();
-    //     }
-    // }
-    //
-    // auto area = lv_area_t{0, 0, 64, 64};
-
-    int x = 100;
-    int y = 100;
-
-    int width = 121;
-    int height = 48;
-
-    GooDisplay::EPD_Dis_Part(y, GooDisplay::DISPLAY_WIDTH - x, width, height);
-
-    GooDisplay::Epaper_Write_Command(0x24); //Write Black and White image to RAM
-
-    for (int x = 0; x < width; x++)
-    {
-        uint8_t byte = 0;
-        uint8_t accumulated = 0;
-
-        for (int y = 0; y < height; y++)
-        {
-            uint8_t pixel = GYW_map[2 * (x + y * width) + 1];
-
-            byte <<= 1;
-            byte |= (pixel == 0xFF ? 0 : 1);
-            accumulated++;
-
-            if (accumulated == 8)
-            {
-                GooDisplay::Epaper_Write_Data(byte);
-                byte = 0;
-                accumulated = 0;
-            }
-        }
-    }
-
-    // GooDisplay::partial_draw(buf, &area);
-    GooDisplay::partial_update();
-}
+// void setup_()
+// {
+//     constexpr size_t BUFFER_SIZE = GooDisplay::DISPLAY_WIDTH * GooDisplay::DISPLAY_HEIGHT;
+//
+//     Serial.begin(115200); // Initialisation de la communication série
+//
+//     auto buf = new lv_color_t[BUFFER_SIZE]; // Taille du buffer (ajuster selon la RAM disponible)
+//
+//     memset(buf, 0xFF, BUFFER_SIZE * sizeof(lv_color_t));
+//
+//     GooDisplay::init_spi();
+//     GooDisplay::EPD_HW_Init_Fast();
+//
+//     GooDisplay::clear_screen(GooDisplay::Color::WHITE);
+//
+//     // for (auto x = 32; x < 64; x++)
+//     // {
+//     //     for (auto y = 32; y < 64; y++)
+//     //     {
+//     //         buf[x + y * GooDisplay::DISPLAY_WIDTH] = lv_color_black();
+//     //     }
+//     // }
+//
+//     // for (auto x = 0; x < 32; x++)
+//     // {
+//     //     for (auto y = 0; y < 32; y++)
+//     //     {
+//     //         buf[x + y * GooDisplay::DISPLAY_WIDTH] = lv_color_black();
+//     //     }
+//     // }
+//     //
+//     // auto area = lv_area_t{0, 0, 64, 64};
+//
+//     int x = 100;
+//     int y = 100;
+//
+//     int width = 121;
+//     int height = 48;
+//
+//     GooDisplay::EPD_Dis_Part(y, GooDisplay::DISPLAY_WIDTH - x, width, height);
+//
+//     GooDisplay::Epaper_Write_Command(0x24); //Write Black and White image to RAM
+//
+//     for (int x = 0; x < width; x++)
+//     {
+//         uint8_t byte = 0;
+//         uint8_t accumulated = 0;
+//
+//         for (int y = 0; y < height; y++)
+//         {
+//             uint8_t pixel = GYW_map[2 * (x + y * width) + 1];
+//
+//             byte <<= 1;
+//             byte |= (pixel == 0xFF ? 0 : 1);
+//             accumulated++;
+//
+//             if (accumulated == 8)
+//             {
+//                 GooDisplay::Epaper_Write_Data(byte);
+//                 byte = 0;
+//                 accumulated = 0;
+//             }
+//         }
+//     }
+//
+//     // GooDisplay::partial_draw(buf, &area);
+//     GooDisplay::partial_update();
+// }
 
 void setup()
 {
