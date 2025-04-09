@@ -6,10 +6,10 @@
 namespace GooDisplay
 {
     //IO settings
-    static int BUSY_Pin = A14;
-    static int RES_Pin = A15;
-    static int DC_Pin = A16;
-    static int CS_Pin = A17;
+    static int BUSY_Pin = 38;
+    static int RES_Pin = 0;
+    static int DC_Pin = 14; 
+    static int CS_Pin = 13; //13 old and 47 pour new
     //SCLK--GPIO23
     //MOSI---GPIO18
 
@@ -38,7 +38,7 @@ namespace GooDisplay
         pinMode(CS_Pin, OUTPUT);
 
         SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
-        SPI.begin();
+        SPI.begin(39, -1, 40); // SCLK = GPIO39, MOSI = GPIO40, pas de MISO, pas de SS
     }
 
     void EPD_HW_Init_Fast()
