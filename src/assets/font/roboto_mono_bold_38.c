@@ -4,11 +4,7 @@
  * Opts: --bpp 4 --size 38 --font robmb.ttf --range 32-127,160-255 --format lvgl -o generated_fonts/roboto_mono_bold_38.c
  ******************************************************************************/
 
-#ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
-#else
-#include "lvgl/lvgl.h"
-#endif
 
 #ifndef ROBOTO_MONO_BOLD_38
 #define ROBOTO_MONO_BOLD_38 1

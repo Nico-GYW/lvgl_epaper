@@ -4,11 +4,7 @@
  * Opts: --bpp 4 --size 26 --font roboto_mono_medium.ttf --range 32-127,160-255 --format lvgl -o generated_fonts/roboto_mono_medium_26.c
  ******************************************************************************/
 
-#ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
-#else
-#include "lvgl/lvgl.h"
-#endif
 
 #ifndef ROBOTO_MONO_MEDIUM_26
 #define ROBOTO_MONO_MEDIUM_26 1
