@@ -7,7 +7,6 @@
 #include "peripherals/goodisplay/lvgl_driver.hpp"      // Utilisation du driver LVGL personnalisé
 #include "utils/GYW_DisplayCommands.h"    // Commandes spécifiques de l'affichage
 #include "utils/GYW_DisplayInternal.h"    //
-#include "blue/GYW_BLE.h"                 // Pour la connexion BLE
 #include "lvgl_mutex.hpp"
 #include "Ap_29demo.h"
 
@@ -123,7 +122,7 @@ void setup()
 
     // displayText_internal(text, 10, 0, "montserrat", fontSize, text_color);
 
-    BLE_Init("GYW aRdent"); // Initialisation de la connexion BLE avec le nom donné
+    // BLE_Init("GYW aRdent"); // Initialisation de la connexion BLE avec le nom donné
 }
 
 void loop_()
