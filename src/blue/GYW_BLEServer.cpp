@@ -184,10 +184,6 @@ void BLE_Init(const char* deviceName)
     // Service Cible
     BLEService* pTargetService = pServer->createService(TARGET_SERVICE_UUID);
 
-    BLECharacteristic* pTargetCtrlCharacteristic = pTargetService->createCharacteristic(
-        TARGET_CTRL_CHAR_UUID,
-        BLECharacteristic::PROPERTY_WRITE
-    );
     pTargetService->start();
 
     // Ajout du service Device Information avec les informations d'appareil

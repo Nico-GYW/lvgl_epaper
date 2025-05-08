@@ -80,7 +80,7 @@ namespace GooDisplay
         Epaper_Write_Data(0x80);
     }
 
-    std::vector<std::byte> transform_buffer(lv_color_t* buffer, uint16_t width, uint16_t height)
+    std::vector<std::byte> transform_buffer(uint8_t* buffer, uint16_t width, uint16_t height)
     {
         std::vector<std::byte> transformed_buffer;
         transformed_buffer.reserve(width * height / 8);
@@ -92,9 +92,9 @@ namespace GooDisplay
 
             for (size_t y = 0; y < height; y++)
             {
-                lv_color_t pixel = buffer[y * width + x];
+                uint8_t pixel = buffer[y * width + x];
 
-                bool white = pixel.full == 0xFF || pixel.full == 0xED || pixel.full == 0xE8;
+                bool white = pixel == 0xFF || pixel == 0xED || pixel == 0xE8;
 
                 byte <<= 1;
                 byte |= (white ? 1 : 0);

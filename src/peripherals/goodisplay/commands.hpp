@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <misc/lv_area.h>
 #include <misc/lv_color.h>
+#include <sys/types.h>
 #include <vector>
 
 namespace GooDisplay
@@ -27,7 +28,7 @@ namespace GooDisplay
 
     void begin_partial_draw();
 
-    std::vector<std::byte> transform_buffer(lv_color_t* buffer, uint16_t width, uint16_t height);
+    std::vector<std::byte> transform_buffer(uint8_t* buffer, uint16_t width, uint16_t height);
 
     void partial_draw(const PartialFramebuffer& partial_framebuffer);
 

@@ -1,54 +1,55 @@
 #ifndef ICONS_H
 #define ICONS_H
 
+#include "draw/lv_image_dsc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Inclusion de tous les fichiers d'icônes générés
-#include "done.c"
-#include "key_5.c"
-#include "down.c"
-#include "warning.c"
-#include "key_1.c"
-#include "GYW.c"
-#include "key_A.c"
-#include "key_hash.c"
-#include "check.c"
-#include "cloud_backup.c"
-#include "info.c"
-#include "key_6.c"
-#include "key_8.c"
-#include "cloud_done.c"
-#include "key_2.c"
-#include "location.c"
-#include "next.c"
-#include "left.c"
-#include "up.c"
-#include "key_B.c"
-#include "folder.c"
-#include "blank.c"
-#include "edit.c"
-#include "wifi.c"
-#include "uncheck.c"
-#include "prev.c"
-#include "key_7.c"
-#include "person.c"
-#include "key_3.c"
-#include "key_9.c"
-#include "help.c"
-#include "nfc.c"
-#include "build.c"
-#include "key_C.c"
-#include "settings.c"
-#include "wifi_off.c"
-#include "key_4.c"
-#include "file.c"
-#include "right.c"
-#include "camera.c"
-#include "key_0.c"
-#include "key_star.c"
-#include "key_D.c"
+extern const lv_image_dsc_t done;
+extern const lv_image_dsc_t key_5;
+extern const lv_image_dsc_t down;
+extern const lv_image_dsc_t warning;
+extern const lv_image_dsc_t key_1;
+extern const lv_image_dsc_t GYW;
+extern const lv_image_dsc_t key_A;
+extern const lv_image_dsc_t key_hash;
+extern const lv_image_dsc_t check;
+extern const lv_image_dsc_t cloud_backup;
+extern const lv_image_dsc_t info;
+extern const lv_image_dsc_t key_6;
+extern const lv_image_dsc_t key_8;
+extern const lv_image_dsc_t cloud_done;
+extern const lv_image_dsc_t key_2;
+extern const lv_image_dsc_t location;
+extern const lv_image_dsc_t next;
+extern const lv_image_dsc_t left;
+extern const lv_image_dsc_t up;
+extern const lv_image_dsc_t key_B;
+extern const lv_image_dsc_t folder;
+extern const lv_image_dsc_t blank;
+extern const lv_image_dsc_t edit;
+extern const lv_image_dsc_t wifi;
+extern const lv_image_dsc_t uncheck;
+extern const lv_image_dsc_t prev;
+extern const lv_image_dsc_t key_7;
+extern const lv_image_dsc_t person;
+extern const lv_image_dsc_t key_3;
+extern const lv_image_dsc_t key_9;
+extern const lv_image_dsc_t help;
+extern const lv_image_dsc_t nfc;
+extern const lv_image_dsc_t build;
+extern const lv_image_dsc_t key_C;
+extern const lv_image_dsc_t settings;
+extern const lv_image_dsc_t wifi_off;
+extern const lv_image_dsc_t key_4;
+extern const lv_image_dsc_t file;
+extern const lv_image_dsc_t right;
+extern const lv_image_dsc_t camera;
+extern const lv_image_dsc_t key_0;
+extern const lv_image_dsc_t key_star;
+extern const lv_image_dsc_t key_D;
 
 #ifdef __cplusplus
 } // extern "C"
