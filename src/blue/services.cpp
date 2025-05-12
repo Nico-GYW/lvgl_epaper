@@ -1,9 +1,9 @@
 #include "services.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <mutex>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <utils/GYW_DisplayCommands.h>
@@ -13,13 +13,9 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
-extern "C" {
-#include "services/ans/ble_svc_ans.h"
-}
-
 #include "uuids.hpp"
 
-std::string globalDataBuffer = "";
+std::string globalDataBuffer;
 std::mutex globalDataMutex;
 
 static uint16_t command_control_char_handle;
@@ -58,28 +54,6 @@ static const struct ble_gatt_svc_def service_definitions[] = {
         0,
     },
 };
-
-static int
-gatt_svr_write(struct os_mbuf* om, uint16_t min_len, uint16_t max_len,
-               void* dst, uint16_t* len)
-{
-    uint16_t om_len;
-    int rc;
-
-    om_len = OS_MBUF_PKTLEN(om);
-    if (om_len < min_len || om_len > max_len)
-    {
-        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-    }
-
-    rc = ble_hs_mbuf_to_flat(om, dst, max_len, len);
-    if (rc != 0)
-    {
-        return BLE_ATT_ERR_UNLIKELY;
-    }
-
-    return 0;
-}
 
 static int
 gatt_svc_access(uint16_t conn_handle, uint16_t attr_handle,
@@ -171,7 +145,6 @@ int gatt_svr_init(void)
 
     ble_svc_gap_init();
     ble_svc_gatt_init();
-    ble_svc_ans_init();
 
     rc = ble_gatts_count_cfg(service_definitions);
     if (rc != 0)

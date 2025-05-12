@@ -1,13 +1,12 @@
 #include <lvgl.h>
 #include <mutex>
+#include <blue/services.hpp>
 #include <peripherals/goodisplay/commands.hpp>
-#include <peripherals/goodisplay/spi.hpp>
 
 #include "peripherals/goodisplay/lvgl_driver.hpp"      // Utilisation du driver LVGL personnalisé
 #include "utils/GYW_DisplayCommands.h"    // Commandes spécifiques de l'affichage
 #include "utils/GYW_DisplayInternal.h"    //
 #include "lvgl_mutex.hpp"
-#include "Ap_29demo.h"
 
 extern const uint8_t GYW_map[];
 
@@ -17,6 +16,8 @@ extern "C" void app_main()
 {
     lv_init(); // Initialisation de la bibliothèque LVGL
     lvgl_display_init_goodisplay();
+
+    init_bluetooth_peripheral();
 
     // Configuration de l'affichage principal et des fonctions Bluetooth
     initDisplayUpdateTask(); // Tâche pour mettre à jour l'affichage

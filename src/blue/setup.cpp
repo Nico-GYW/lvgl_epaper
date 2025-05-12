@@ -1,44 +1,49 @@
-#include "esp_log.h"
-#include "nvs_flash.h"
-/* BLE */
-#include "nimble/nimble_port.h"
-#include "nimble/nimble_port_freertos.h"
-#include "host/ble_hs.h"
-#include "host/util/util.h"
-#include "console/console.h"
-#include "services/gap/ble_svc_gap.h"
+#include <esp_log.h>
+#include <nvs_flash.h>
+#include <nimble/nimble_port.h>
+#include <nimble/nimble_port_freertos.h>
+#include <host/ble_hs.h>
+#include <host/util/util.h>
+#include <console/console.h>
+#include <services/gap/ble_svc_gap.h>
+#include <string>
 
 #include "services.hpp"
 
-static const char* tag = "NimBLE_BLE_PRPH";
-static int bleprph_gap_event(struct ble_gap_event* event, void* arg);
+static const char* tag = "bluetooth/setup";
+static const std::string device_name = "GYW aRdent OLED Display";
+
+static int bleprph_gap_event(ble_gap_event* event, void* arg);
 static uint8_t own_addr_type;
 
 extern "C" void ble_store_config_init(void);
 
-static void
-bleprph_advertise(void)
+static void advertise()
 {
-    struct ble_gap_adv_params adv_params;
-    int rc;
+    ble_gap_adv_params adv_params{};
 
-    /* Begin advertising. */
+    ble_hs_adv_fields fields = {};
+    fields.name = reinterpret_cast<const uint8_t*>(device_name.c_str());
+    fields.name_len = device_name.length();
+    fields.name_is_complete = 1;
+
     memset(&adv_params, 0, sizeof adv_params);
     adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
-    rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER,
-                           &adv_params, bleprph_gap_event, NULL);
+
+    ble_gap_adv_set_fields(&fields);
+
+    const int rc = ble_gap_adv_start(own_addr_type, nullptr, BLE_HS_FOREVER,
+                                     &adv_params, bleprph_gap_event, nullptr);
     if (rc != 0)
     {
-        MODLOG_DFLT(ERROR, "error enabling advertisement; rc=%d\n", rc);
-        return;
+        MODLOG_DFLT(ERROR, "Error enabling advertisement; rc=%d\n", rc);
     }
 }
 
-static int
-bleprph_gap_event(struct ble_gap_event* event, void* arg)
+static int bleprph_gap_event(ble_gap_event* event, void* arg)
 {
-    struct ble_gap_conn_desc desc;
+    ble_gap_conn_desc desc{};
     int rc;
 
     switch (event->type)
@@ -58,7 +63,7 @@ bleprph_gap_event(struct ble_gap_event* event, void* arg)
         if (event->connect.status != 0)
         {
             /* Connection failed; resume advertising. */
-            bleprph_advertise();
+            advertise();
         }
         return 0;
 
@@ -67,7 +72,7 @@ bleprph_gap_event(struct ble_gap_event* event, void* arg)
         MODLOG_DFLT(INFO, "\n");
 
     /* Connection terminated; resume advertising. */
-        bleprph_advertise();
+        advertise();
         return 0;
 
     case BLE_GAP_EVENT_CONN_UPDATE:
@@ -82,7 +87,7 @@ bleprph_gap_event(struct ble_gap_event* event, void* arg)
     case BLE_GAP_EVENT_ADV_COMPLETE:
         MODLOG_DFLT(INFO, "advertise complete; reason=%d",
                     event->adv_complete.reason);
-        bleprph_advertise();
+        advertise();
         return 0;
 
     case BLE_GAP_EVENT_ENC_CHANGE:
@@ -137,24 +142,22 @@ bleprph_gap_event(struct ble_gap_event* event, void* arg)
      * continue with the pairing operation.
      */
         return BLE_GAP_REPEAT_PAIRING_RETRY;
-    }
 
-    return 0;
+    default:
+        // Event not handled.
+        return 0;
+    }
 }
 
-static void
-bleprph_on_reset(int reason)
+static void bleprph_on_reset(int reason)
 {
     MODLOG_DFLT(ERROR, "Resetting state; reason=%d\n", reason);
 }
 
-static void
-bleprph_on_sync(void)
+static void bleprph_on_sync()
 {
-    int rc;
-
     /* Make sure we have proper identity address set (public preferred) */
-    rc = ble_hs_util_ensure_addr(0);
+    int rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
 
     /* Figure out address to use while advertising (no privacy for now) */
@@ -173,7 +176,7 @@ bleprph_on_sync(void)
     MODLOG_DFLT(INFO, "\n");
 
     /* Begin advertising. */
-    bleprph_advertise();
+    advertise();
 }
 
 void bleprph_host_task(void* param)
@@ -187,8 +190,6 @@ void bleprph_host_task(void* param)
 
 void init_bluetooth_peripheral()
 {
-    int rc;
-
     /* Initialize NVS — it is used to store PHY calibration data */
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -198,7 +199,8 @@ void init_bluetooth_peripheral()
     }
     ESP_ERROR_CHECK(ret);
 
-    nimble_port_init();
+    ret = nimble_port_init();
+    ESP_ERROR_CHECK(ret);
 
     /* Initialize the NimBLE host configuration. */
     ble_hs_cfg.reset_cb = bleprph_on_reset;
@@ -207,7 +209,7 @@ void init_bluetooth_peripheral()
 
     ble_hs_cfg.sm_io_cap = BLE_SM_IO_CAP_NO_IO;
 
-    rc = gatt_svr_init();
+    int rc = gatt_svr_init();
     assert(rc == 0);
 
     /* Set the default device name. */
