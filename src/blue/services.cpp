@@ -28,6 +28,8 @@ static uint16_t manufacturer_name_char_handle;
 static uint16_t model_number_char_handle;
 static uint16_t serial_number_char_handle;
 
+static uint16_t battery_level_char_handle;
+
 static uint16_t command_control_char_handle;
 static uint16_t command_data_char_handle;
 
@@ -41,7 +43,6 @@ static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
 
 static const ble_gatt_svc_def service_definitions[] = {
     {
-        /*** Service ***/
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
         .uuid = &command_service_uuid.u,
         .characteristics = (struct ble_gatt_chr_def[])
@@ -65,7 +66,6 @@ static const ble_gatt_svc_def service_definitions[] = {
         },
     },
     {
-        /*** Service ***/
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
         .uuid = &device_information_service_uuid.u,
         .characteristics = (struct ble_gatt_chr_def[])
@@ -103,6 +103,22 @@ static const ble_gatt_svc_def service_definitions[] = {
         },
     },
     {
+        .type = BLE_GATT_SVC_TYPE_PRIMARY,
+        .uuid = &battery_service_uuid.u,
+        .characteristics = (struct ble_gatt_chr_def[])
+        {
+            {
+                .uuid = &battery_level_char_uuid.u,
+                .access_cb = gatt_read_handler,
+                .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
+                .val_handle = &battery_level_char_handle,
+            },
+            {
+                0,
+            }
+        },
+    },
+    {
         0,
     },
 };
@@ -127,6 +143,12 @@ static int gatt_read_handler(uint16_t conn_handle, uint16_t attr_handle,
     {
         data = serial_number;
     }
+    else if (attr_handle == battery_level_char_handle)
+    {
+        uint8_t battery_level = 42;
+        const int rc = os_mbuf_append(ctxt->om, &battery_level, sizeof(battery_level));
+        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
     else
     {
         return BLE_ATT_ERR_UNLIKELY;
@@ -139,8 +161,6 @@ static int gatt_read_handler(uint16_t conn_handle, uint16_t attr_handle,
 static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
                               ble_gatt_access_ctxt* ctxt, void* arg)
 {
-    assert(ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR);
-
     if (attr_handle == command_control_char_handle)
     {
         uint8_t* data = ctxt->om->om_data;
@@ -148,6 +168,8 @@ static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
 
         if (data_len == 0)
             return 0;
+
+        // TODO(arosca): Do this the C++ way.
 
         uint8_t commandCode = data[0];
         uint8_t* paramsData = data + 1;

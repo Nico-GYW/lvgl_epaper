@@ -11,7 +11,7 @@
 #include "services.hpp"
 
 static const char* tag = "bluetooth/setup";
-static const std::string device_name = "GYW aRdent OLED Display";
+static const std::string device_name = "GYW aRdent";
 
 static int bleprph_gap_event(ble_gap_event* event, void* arg);
 static uint8_t own_addr_type;
