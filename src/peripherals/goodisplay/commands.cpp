@@ -1,34 +1,16 @@
 #include "commands.hpp"
 
 #include <array>
-#include <esp32-hal.h>
-#include <HardwareSerial.h>
-#include <misc/lv_area.h>
+#include <freertos/FreeRTOS.h>
+#include <portmacro.h>
+#include <freertos/projdefs.h>
+#include <freertos/task.h>
 #include <misc/lv_color.h>
 
 #include "spi.hpp"
 
 namespace GooDisplay
 {
-    // std::array<unsigned char, DISPLAY_WIDTH * DISPLAY_HEIGHT / 8> buffer = {};
-
-    // void draw_pixel(unsigned int x, unsigned int y, Color color)
-    // {
-    //     if (x > DISPLAY_WIDTH || y > DISPLAY_HEIGHT)
-    //     {
-    //         assert(false);
-    //         return;
-    //     }
-    //
-    //     std::swap(x, y);
-    //
-    //     unsigned int i = x / 8 + y * (DISPLAY_HEIGHT / 8);
-    //     if (color == Color::BLACK)
-    //         buffer[i] = (buffer[i] & ~(1 << (7 - x % 8)));
-    //     else
-    //         buffer[i] = (buffer[i] | (1 << (7 - x % 8)));
-    // }
-
     void EPD_Dis_Part(unsigned int x_start, unsigned int y_start, unsigned int PART_COLUMN,
                       unsigned int PART_LINE)
     {
@@ -72,9 +54,9 @@ namespace GooDisplay
     {
         //Reset
         EPD_W21_RST_0(); // Module reset
-        delay(10); //At least 10ms delay
+        vTaskDelay(pdMS_TO_TICKS(10)); // At least 10ms delay
         EPD_W21_RST_1();
-        delay(10); //At least 10ms delay
+        vTaskDelay(pdMS_TO_TICKS(10)); // At least 10ms delay
 
         Epaper_Write_Command(0x3C); //BorderWavefrom
         Epaper_Write_Data(0x80);

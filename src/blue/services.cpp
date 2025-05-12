@@ -1,14 +1,26 @@
 #include "services.hpp"
 
 #include <assert.h>
+#include <mutex>
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include <vector>
+#include <utils/GYW_DisplayCommands.h>
+
 #include "host/ble_hs.h"
 #include "host/ble_uuid.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+
+extern "C" {
 #include "services/ans/ble_svc_ans.h"
+}
+
 #include "uuids.hpp"
+
+std::string globalDataBuffer = "";
+std::mutex globalDataMutex;
 
 static uint16_t command_control_char_handle;
 static uint16_t command_data_char_handle;
@@ -73,7 +85,7 @@ static int
 gatt_svc_access(uint16_t conn_handle, uint16_t attr_handle,
                 struct ble_gatt_access_ctxt* ctxt, void* arg)
 {
-    int rc;
+    int rc = 0;
 
     switch (ctxt->op)
     {
@@ -90,15 +102,54 @@ gatt_svc_access(uint16_t conn_handle, uint16_t attr_handle,
         }
         if (attr_handle == command_control_char_handle)
         {
-            // TODO(arosca)
-            rc = gatt_svr_write(ctxt->om,
-                                sizeof(gatt_svr_chr_val),
-                                sizeof(gatt_svr_chr_val),
-                                &gatt_svr_chr_val, NULL);
-            ble_gatts_chr_updated(attr_handle);
-            MODLOG_DFLT(INFO, "Notification/Indication scheduled for "
-                        "all subscribed peers.\n");
+            uint8_t* data = ctxt->om->om_data;
+            size_t data_len = OS_MBUF_PKTLEN(ctxt->om);
+
+            if (data_len == 0)
+                return 0;
+
+            uint8_t commandCode = data[0];
+            uint8_t* paramsData = data + 1;
+            size_t paramsLength = data_len - 1;
+
+            DisplayCommand command = {};
+            command.cmdType = static_cast<DisplayCommandType>(commandCode);
+            command.paramsLength = paramsLength;
+
+            memcpy(command.paramsData, paramsData, paramsLength);
+
+            std::scoped_lock lock(globalDataMutex);
+
+            // Si nécessaire, copie le buffer global de données
+            if (!globalDataBuffer.empty())
+            {
+                strncpy(command.dataBuffer, globalDataBuffer.c_str(), sizeof(command.dataBuffer) - 1);
+            }
+
+            // Enfile la commande
+            process_command(command);
+
+            // Vide le buffer global après le traitement
+            globalDataBuffer.clear();
+
             return rc;
+        }
+        else if (attr_handle == command_data_char_handle)
+        {
+            uint8_t* data = ctxt->om->om_data;
+            size_t data_len = OS_MBUF_PKTLEN(ctxt->om);
+
+            if (data_len == 0)
+                return 0;
+
+            std::scoped_lock lock(globalDataMutex);
+            globalDataBuffer += reinterpret_cast<const char*>(data);
+
+            return rc;
+        }
+        else
+        {
+            return BLE_ATT_ERR_UNLIKELY;
         }
         goto unknown;
 

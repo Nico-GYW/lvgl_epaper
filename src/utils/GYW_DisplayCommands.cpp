@@ -1,12 +1,11 @@
 #include "GYW_DisplayCommands.h"
 #include "GYW_DisplayInternal.h"
 #include "GYW_DisplayResources.h"
-#include "./GYW_Debug.h"
-#include <Arduino.h>
 #include <lvgl_mutex.hpp>
 #include <string>
 #include <queue>
 #include "utils/mpsc.hpp"
+#include <cmath>
 
 // Define virtual and physical resolution dimensions
 #define VIRTUAL_WIDTH 854
@@ -71,7 +70,7 @@ void process_command(DisplayCommand& cmd)
         // processDisplaySpinnerCommand(&cmd);
         break;
     default:
-        DEBUG_WARNING("Unknown display command: %d\n", cmd.cmdType);
+        printf("Unknown display command: %d\n", cmd.cmdType);
         break;
     }
 }
@@ -100,11 +99,11 @@ void DisplayUpdateTask(void* pvParameters)
             if (delayPassed)
                 break;
 
-            delay(100);
+            vTaskDelay(pdMS_TO_TICKS(100));
             delayPassed = true;
         }
 
-        Serial.println("lv_refr_now");
+        printf("lv_refr_now");
 
         std::scoped_lock l(lvgl_mutex);
         lv_refr_now(nullptr);
@@ -129,7 +128,7 @@ void processDisplayIconCommand(DisplayCommand* cmd)
 
     if (paramsLength < 2 + 2 + 4 + 1)
     {
-        DEBUG_ERROR("processDisplayIconCommand: Insufficient parameters.\n");
+        printf("processDisplayIconCommand: Insufficient parameters.\n");
         return;
     }
 
@@ -154,9 +153,9 @@ void processDisplayIconCommand(DisplayCommand* cmd)
 
     lv_color_t color = lv_color_make(red, green, blue);
 
-    DEBUG_INFO("[processDisplayIconCommand] Icon: '%s'\n", iconName.c_str());
-    DEBUG_INFO("[processDisplayIconCommand] Position: (%d, %d)\n", x, y);
-    DEBUG_INFO("[processDisplayIconCommand] Scale: %.2f\n", scale);
+    printf("[processDisplayIconCommand] Icon: '%s'\n", iconName.c_str());
+    printf("[processDisplayIconCommand] Position: (%d, %d)\n", x, y);
+    printf("[processDisplayIconCommand] Scale: %.2f\n", scale);
 
     draw_calls.send([=]
     {
@@ -174,7 +173,7 @@ void processDisplayTextCommand(DisplayCommand* cmd)
 
     if (paramsLength < 2 + 2 + 5 + 1 + 4)
     {
-        DEBUG_ERROR("processDisplayTextCommand: Insufficient parameters.\n");
+        printf("processDisplayTextCommand: Insufficient parameters.\n");
         return;
     }
 
@@ -197,9 +196,9 @@ void processDisplayTextCommand(DisplayCommand* cmd)
 
     lv_color_t color = lv_color_make(red, green, blue);
 
-    DEBUG_INFO("[processDisplayTextCommand] Text: '%s'\n", textData.c_str());
-    DEBUG_INFO("[processDisplayTextCommand] Position: (%d, %d)\n", x, y);
-    DEBUG_INFO("[processDisplayTextCommand] Font size: %d\n", fontSize);
+    printf("[processDisplayTextCommand] Text: '%s'\n", textData.c_str());
+    printf("[processDisplayTextCommand] Position: (%d, %d)\n", x, y);
+    printf("[processDisplayTextCommand] Font size: %d\n", fontSize);
 
     draw_calls.send([=]
     {
@@ -221,7 +220,7 @@ void processClearScreenCommand(DisplayCommand* cmd)
         color = lv_color_make(red, green, blue);
     }
 
-    DEBUG_INFO("[processClearScreenCommand] Clearing screen with color.\n");
+    printf("[processClearScreenCommand] Clearing screen with color.\n");
 
     draw_calls.clear();
     draw_calls.send([=]
@@ -239,7 +238,7 @@ void processDisplayRectangleCommand(DisplayCommand* cmd)
 
     if (paramsLength < 2 + 2 + 2 + 2 + 4)
     {
-        DEBUG_ERROR("processDisplayRectangleCommand: Insufficient parameters.\n");
+        printf("processDisplayRectangleCommand: Insufficient parameters.\n");
         return;
     }
 
@@ -272,7 +271,7 @@ void processDisplayRectangleCommand(DisplayCommand* cmd)
         // color = lv_color_make(red, green, blue);
     // }
 
-    DEBUG_INFO("[processDisplayRectangleCommand] Rectangle at (%d, %d) size (%d, %d).\n", x, y, width, height);
+    printf("[processDisplayRectangleCommand] Rectangle at (%d, %d) size (%d, %d).\n", x, y, width, height);
 
     draw_calls.send([=]
     {
@@ -287,12 +286,12 @@ void processSetScreenBrightnessCommand(DisplayCommand* cmd)
 
     if (paramsLength < 1)
     {
-        DEBUG_ERROR("processSetScreenBrightnessCommand: Insufficient parameters.\n");
+        printf("processSetScreenBrightnessCommand: Insufficient parameters.\n");
         return;
     }
 
-    uint8_t brightness = map(paramsData[0], 0, 255, 0, 100);
-    DEBUG_INFO("[processSetScreenBrightnessCommand] Brightness set to: %d\n", brightness);
+    const auto brightness = static_cast<uint8_t>(std::round(static_cast<double>(paramsData[0]) / 255.0 * 100.0));
+    printf("[processSetScreenBrightnessCommand] Brightness set to: %d\n", brightness);
     setScreenBrightness_internal(brightness);
 }
 
@@ -303,7 +302,7 @@ void processDisplaySpinnerCommand(DisplayCommand* cmd)
 
     if (paramsLength < 2 + 2 + 4 + 1 + 1)
     {
-        DEBUG_ERROR("processDisplaySpinnerCommand: Insufficient parameters.\n");
+        printf("processDisplaySpinnerCommand: Insufficient parameters.\n");
         return;
     }
 
@@ -324,7 +323,7 @@ void processDisplaySpinnerCommand(DisplayCommand* cmd)
     float scale = scaleFactor((float)paramsData[index++] / 10.0f);
     float spins_per_second = (float)paramsData[index++] / 10.0f;
 
-    DEBUG_INFO("[processDisplaySpinnerCommand] Spinner at (%d, %d) scale %.1f, speed %.1f.\n", x, y, scale,
+    printf("[processDisplaySpinnerCommand] Spinner at (%d, %d) scale %.1f, speed %.1f.\n", x, y, scale,
                spins_per_second);
 
     draw_calls.send([=]

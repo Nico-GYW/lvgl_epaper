@@ -4,7 +4,6 @@
 #include <lvgl.h>
 #include <utils/timer.hpp>
 #include <esp_timer.h>
-#include <HardwareSerial.h>
 
 #include "spi.hpp"
 #include "commands.hpp"
@@ -38,12 +37,12 @@ static void render_start_cb(lv_disp_drv_t* disp_drv)
 // Callback pour la mise à jour de l’écran e-paper
 static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p)
 {
-    Serial.println("flush callback");
-    Serial.println("area size");
-    Serial.println(area->x1);
-    Serial.println(area->y1);
-    Serial.println(area->x2);
-    Serial.println(area->y2);
+    printf("%s\n", "flush callback");
+    printf("%s\n", "area size");
+    printf("%d\n", area->x1);
+    printf("%d\n", area->y1);
+    printf("%d\n", area->x2);
+    printf("%d\n", area->y2);
 
     auto width = lv_area_get_width(area);
     auto height = lv_area_get_height(area);
@@ -61,7 +60,7 @@ static void flush_cb(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* col
 
     if (lv_disp_flush_is_last(disp))
     {
-        Serial.println("update");
+        printf("%s\n", "update");
         GooDisplay::partial_update();
 
         for (const auto& framebuffer : partial_framebuffers)
@@ -87,30 +86,6 @@ void lvgl_display_init_goodisplay()
     GooDisplay::EPD_HW_Init_Fast();
 
     GooDisplay::clear_screen(GooDisplay::Color::WHITE);
-
-    // for (size_t i = 0; i < 100; i++)
-    // {
-    //     GooDisplay::draw_pixel(i, 100, GooDisplay::Color::BLACK);
-    //     GooDisplay::draw_pixel(i, 101, GooDisplay::Color::BLACK);
-    //     GooDisplay::draw_pixel(i, 102, GooDisplay::Color::BLACK);
-    // }
-
-    // GooDisplay::fill(GooDisplay::Color::BLACK);
-
-    // GooDisplay::partial_draw(0, 0, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
-
-    // const unsigned char buffer[] = {
-    //     (unsigned char)0b00000000,
-    //     (unsigned char)0b00000000,
-    //     (unsigned char)0b00000000,
-    //     (unsigned char)0b00101011,
-    //     (unsigned char)0b01010101,
-    //     (unsigned char)0b00101011,
-    //     (unsigned char)0b01010101,
-    //     (unsigned char)0b01111111,
-    // };
-
-    // GooDisplay::partial_draw(0, GooDisplay::DISPLAY_WIDTH - 1, GooDisplay::DISPLAY_WIDTH, GooDisplay::DISPLAY_HEIGHT);
 
     // Initialisation du buffer de dessin LVGL
     lv_disp_draw_buf_init(&draw_buf, buf, nullptr, BUFFER_SIZE);

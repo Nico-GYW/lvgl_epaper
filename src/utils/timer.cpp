@@ -1,7 +1,5 @@
 #include "timer.hpp"
 
-#include <Arduino.h>
-
 double Timer::elapsed() const
 {
     auto end = std::chrono::high_resolution_clock::now();
@@ -16,7 +14,7 @@ void Timer::stop()
 {
     stopped = true;
     double duration = elapsed();
-    Serial.printf("[%s] Elapsed: %.2f ms\n", tag.c_str(), duration);
+    printf("[%s] Elapsed: %.2f ms\n", tag.c_str(), duration);
 }
 
 Timer::~Timer()

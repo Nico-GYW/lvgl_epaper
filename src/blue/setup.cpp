@@ -10,11 +10,11 @@
 
 #include "services.hpp"
 
-static const char *tag = "NimBLE_BLE_PRPH";
-static int bleprph_gap_event(struct ble_gap_event *event, void *arg);
+static const char* tag = "NimBLE_BLE_PRPH";
+static int bleprph_gap_event(struct ble_gap_event* event, void* arg);
 static uint8_t own_addr_type;
 
-void ble_store_config_init(void);
+extern "C" void ble_store_config_init(void);
 
 static void
 bleprph_advertise(void)
@@ -28,31 +28,35 @@ bleprph_advertise(void)
     adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
     rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER,
                            &adv_params, bleprph_gap_event, NULL);
-    if (rc != 0) {
+    if (rc != 0)
+    {
         MODLOG_DFLT(ERROR, "error enabling advertisement; rc=%d\n", rc);
         return;
     }
 }
 
 static int
-bleprph_gap_event(struct ble_gap_event *event, void *arg)
+bleprph_gap_event(struct ble_gap_event* event, void* arg)
 {
     struct ble_gap_conn_desc desc;
     int rc;
 
-    switch (event->type) {
+    switch (event->type)
+    {
     case BLE_GAP_EVENT_CONNECT:
         /* A new connection was established or a connection attempt failed. */
         MODLOG_DFLT(INFO, "connection %s; status=%d ",
                     event->connect.status == 0 ? "established" : "failed",
                     event->connect.status);
-        if (event->connect.status == 0) {
+        if (event->connect.status == 0)
+        {
             rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
             assert(rc == 0);
         }
         MODLOG_DFLT(INFO, "\n");
 
-        if (event->connect.status != 0) {
+        if (event->connect.status != 0)
+        {
             /* Connection failed; resume advertising. */
             bleprph_advertise();
         }
@@ -62,7 +66,7 @@ bleprph_gap_event(struct ble_gap_event *event, void *arg)
         MODLOG_DFLT(INFO, "disconnect; reason=%d ", event->disconnect.reason);
         MODLOG_DFLT(INFO, "\n");
 
-        /* Connection terminated; resume advertising. */
+    /* Connection terminated; resume advertising. */
         bleprph_advertise();
         return 0;
 
@@ -129,9 +133,9 @@ bleprph_gap_event(struct ble_gap_event *event, void *arg)
         assert(rc == 0);
         ble_store_util_delete_peer(&desc.peer_id_addr);
 
-        /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
-         * continue with the pairing operation.
-         */
+    /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
+     * continue with the pairing operation.
+     */
         return BLE_GAP_REPEAT_PAIRING_RETRY;
     }
 
@@ -155,7 +159,8 @@ bleprph_on_sync(void)
 
     /* Figure out address to use while advertising (no privacy for now) */
     rc = ble_hs_id_infer_auto(0, &own_addr_type);
-    if (rc != 0) {
+    if (rc != 0)
+    {
         MODLOG_DFLT(ERROR, "error determining address type; rc=%d\n", rc);
         return;
     }
@@ -171,7 +176,7 @@ bleprph_on_sync(void)
     bleprph_advertise();
 }
 
-void bleprph_host_task(void *param)
+void bleprph_host_task(void* param)
 {
     ESP_LOGI(tag, "BLE Host Task Started");
     /* This function will return only when nimble_port_stop() is executed */
@@ -180,13 +185,14 @@ void bleprph_host_task(void *param)
     nimble_port_freertos_deinit();
 }
 
-void init_bluetooth_peripheral(void)
+void init_bluetooth_peripheral()
 {
     int rc;
 
     /* Initialize NVS — it is used to store PHY calibration data */
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
