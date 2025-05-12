@@ -47,6 +47,30 @@ static const ble_gatt_svc_def service_definitions[] = {
         .characteristics = (struct ble_gatt_chr_def[])
         {
             {
+                .uuid = &command_control_char_uuid.u,
+                .access_cb = gatt_write_handler,
+                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
+                .val_handle = &command_control_char_handle,
+            },
+            {
+                .uuid = &command_data_char_uuid.u,
+                .access_cb = gatt_write_handler,
+                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
+                .val_handle = &command_data_char_handle,
+            },
+
+            {
+                0,
+            }
+        },
+    },
+    {
+        /*** Service ***/
+        .type = BLE_GATT_SVC_TYPE_PRIMARY,
+        .uuid = &device_information_service_uuid.u,
+        .characteristics = (struct ble_gatt_chr_def[])
+        {
+            {
                 .uuid = &firmware_version_uuid.u,
                 .access_cb = gatt_read_handler,
                 .flags = BLE_GATT_CHR_F_READ,
@@ -73,20 +97,6 @@ static const ble_gatt_svc_def service_definitions[] = {
                 .flags = BLE_GATT_CHR_F_READ,
                 .val_handle = &serial_number_char_handle,
             },
-
-            {
-                .uuid = &command_control_char_uuid.u,
-                .access_cb = gatt_write_handler,
-                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
-                .val_handle = &command_control_char_handle,
-            },
-            {
-                .uuid = &command_data_char_uuid.u,
-                .access_cb = gatt_write_handler,
-                .flags = BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_WRITE_NO_RSP,
-                .val_handle = &command_data_char_handle,
-            },
-
             {
                 0,
             }
