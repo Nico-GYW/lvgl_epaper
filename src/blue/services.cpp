@@ -161,7 +161,22 @@ static int gatt_read_handler(uint16_t conn_handle, uint16_t attr_handle,
 static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
                               ble_gatt_access_ctxt* ctxt, void* arg)
 {
-    if (attr_handle == command_control_char_handle)
+    if (attr_handle == command_data_char_handle)
+    {
+        auto data = reinterpret_cast<const char*>(ctxt->om->om_data);
+        size_t data_len = OS_MBUF_PKTLEN(ctxt->om);
+
+        if (data_len == 0)
+            return 0;
+
+        std::string value(data, data_len);
+
+        std::scoped_lock lock(globalDataMutex);
+        globalDataBuffer += value;
+
+        return 0;
+    }
+    else if (attr_handle == command_control_char_handle)
     {
         uint8_t* data = ctxt->om->om_data;
         size_t data_len = OS_MBUF_PKTLEN(ctxt->om);
@@ -169,7 +184,7 @@ static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
         if (data_len == 0)
             return 0;
 
-        // TODO(arosca): Do this the C++ way.
+        // TODO(arosca): Don't use C arrays.
 
         uint8_t commandCode = data[0];
         uint8_t* paramsData = data + 1;
@@ -194,19 +209,6 @@ static int gatt_write_handler(uint16_t conn_handle, uint16_t attr_handle,
 
         // Vide le buffer global après le traitement
         globalDataBuffer.clear();
-
-        return 0;
-    }
-    else if (attr_handle == command_data_char_handle)
-    {
-        uint8_t* data = ctxt->om->om_data;
-        size_t data_len = OS_MBUF_PKTLEN(ctxt->om);
-
-        if (data_len == 0)
-            return 0;
-
-        std::scoped_lock lock(globalDataMutex);
-        globalDataBuffer += reinterpret_cast<const char*>(data);
 
         return 0;
     }
